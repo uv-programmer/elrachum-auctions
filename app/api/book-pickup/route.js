@@ -18,7 +18,12 @@ export async function POST(request) {
       const { error: dbError } = await sb
         .from('bookings')
         .insert([{ name, email, phone, lots, slot, notes: notes || '' }])
-      if (dbError) console.error('Supabase insert error:', dbError)
+      if (dbError) {
+        console.error('Supabase insert error:', dbError)
+        return NextResponse.json({ error: 'Database error: ' + dbError.message }, { status: 500 })
+      }
+    } else {
+      console.warn('Supabase admin client not initialized — check SUPABASE_SERVICE_ROLE_KEY')
     }
 
     // Confirmation email to customer
@@ -29,8 +34,8 @@ export async function POST(request) {
         subject: `Pickup Booking Confirmed — ${slot}`,
         html: `
           <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:24px;">
-            <div style="background:#111;padding:20px 24px;border-radius:12px;margin-bottom:24px;border-bottom:3px solid #C0392B;">
-              <h1 style="color:white;font-size:20px;margin:0;">Pickup Confirmed ✓</h1>
+            <div style="background:#faf7f2;padding:20px 24px;border-radius:12px;margin-bottom:24px;border-bottom:3px solid #9c6e28;">
+              <h1 style="color:#1e1810;font-size:20px;margin:0;">Pickup Confirmed ✓</h1>
             </div>
             <p style="color:#374151;">Hi <strong>${name}</strong>,</p>
             <p style="color:#374151;">Your pickup slot has been booked. Here are your details:</p>
@@ -42,7 +47,7 @@ export async function POST(request) {
                 ${notes ? `<tr><td style="padding:6px 0;color:#6B7280;font-size:13px;">Notes</td><td style="padding:6px 0;color:#111;font-size:13px;">${notes}</td></tr>` : ''}
               </table>
             </div>
-            <p style="color:#374151;font-size:14px;">Please bring a valid photo ID when you arrive. To reschedule, reply to this email or contact us at <a href="mailto:contact@elrachumauctions.com" style="color:#C0392B;">contact@elrachumauctions.com</a>.</p>
+            <p style="color:#374151;font-size:14px;">Please bring a valid photo ID when you arrive. To reschedule, reply to this email or contact us at <a href="mailto:contact@elrachumauctions.com" style="color:#9c6e28;">contact@elrachumauctions.com</a>.</p>
             <p style="color:#999;font-size:13px;margin-top:24px;">— El Rachum Auctions LLC</p>
           </div>
         `,

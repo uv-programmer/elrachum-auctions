@@ -30,6 +30,11 @@ CREATE POLICY "Allow admin select"
 CREATE POLICY "Allow admin delete"
   ON bookings FOR DELETE TO authenticated USING (true);
 
+-- Explicit grants (required in newer Supabase instances)
+GRANT ALL PRIVILEGES ON TABLE bookings TO service_role;
+GRANT ALL PRIVILEGES ON TABLE bookings TO authenticated;
+GRANT INSERT ON TABLE bookings TO anon;
+
 -- ── 2. Contact submissions table ─────────────────────────────
 CREATE TABLE contact_submissions (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -50,3 +55,8 @@ CREATE POLICY "Allow admin select"
 
 CREATE POLICY "Allow admin delete"
   ON contact_submissions FOR DELETE TO authenticated USING (true);
+
+-- Explicit grants
+GRANT ALL PRIVILEGES ON TABLE contact_submissions TO service_role;
+GRANT ALL PRIVILEGES ON TABLE contact_submissions TO authenticated;
+GRANT INSERT ON TABLE contact_submissions TO anon;
