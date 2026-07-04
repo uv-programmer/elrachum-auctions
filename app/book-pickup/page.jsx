@@ -37,29 +37,26 @@ function getUpcomingDates(weeks = 3) {
   return dates
 }
 
-// Format "YYYY-MM-DD" + "HH:MM" → human readable
 function formatCustomSlot(dateStr, timeStr) {
   if (!dateStr || !timeStr) return ''
   const [y, m, d] = dateStr.split('-').map(Number)
   const date = new Date(y, m - 1, d)
   const dow = DAY_NAMES[date.getDay()]
   const mon = MONTH_NAMES[date.getMonth()]
-  // Convert 24h to 12h
   const [h, min] = timeStr.split(':').map(Number)
   const ampm = h >= 12 ? 'PM' : 'AM'
   const h12 = h % 12 || 12
   return `${dow}, ${mon} ${d} · ${h12}:${min.toString().padStart(2, '0')} ${ampm} (custom)`
 }
 
-// Tomorrow as YYYY-MM-DD for min date attribute
 function getTomorrow() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
   return d.toISOString().split('T')[0]
 }
 
-const inputClass = 'w-full px-4 py-3 rounded-xl text-sm text-white outline-none transition-all'
-const inputStyle = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }
+const inputClass = 'w-full px-4 py-3 rounded-xl text-sm outline-none transition-all'
+const inputStyle = { background: 'rgba(156,110,40,0.04)', border: '1px solid var(--c-border)', color: 'var(--c-text)' }
 
 export default function BookPickupPage() {
   const [step, setStep] = useState(0)
@@ -79,7 +76,6 @@ export default function BookPickupPage() {
 
   const selectedEntry = upcomingDates.find(d => d.label === form.date)
 
-  // Slot label differs by mode
   const slotLabel = customMode
     ? formatCustomSlot(customDate, customTime)
     : (form.date && form.time ? `${form.date} · ${form.time}` : '')
@@ -108,18 +104,18 @@ export default function BookPickupPage() {
     setSubmitting(false)
   }
 
-  const focusStyle = (e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)')
-  const blurStyle = (e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')
+  const focusStyle = (e) => (e.currentTarget.style.borderColor = 'var(--c-accent)')
+  const blurStyle = (e) => (e.currentTarget.style.borderColor = 'var(--c-border)')
 
   if (done) return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--c-bg)' }}>
       <div className="text-center max-w-sm">
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(192,57,43,0.15)', border: '1px solid rgba(192,57,43,0.3)' }}>
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(156,110,40,0.10)', border: '1px solid var(--c-border-s)' }}>
           <Check size={28} style={{ color: 'var(--c-accent)' }} />
         </div>
-        <h2 className="font-serif text-3xl font-bold text-white mb-3">Booking Received!</h2>
-        <p className="text-sm mb-2" style={{ color: 'var(--c-muted)' }}>A confirmation has been sent to <strong className="text-white">{form.email}</strong>.</p>
-        <p className="text-sm mb-1" style={{ color: 'var(--c-muted)' }}>Requested slot: <strong className="text-white">{slotLabel}</strong></p>
+        <h2 className="font-serif text-3xl font-bold mb-3" style={{ color: 'var(--c-text)' }}>Booking Received!</h2>
+        <p className="text-sm mb-2" style={{ color: 'var(--c-muted)' }}>A confirmation has been sent to <strong style={{ color: 'var(--c-text)' }}>{form.email}</strong>.</p>
+        <p className="text-sm mb-1" style={{ color: 'var(--c-muted)' }}>Requested slot: <strong style={{ color: 'var(--c-text)' }}>{slotLabel}</strong></p>
         <p className="text-sm" style={{ color: 'var(--c-muted)' }}>Please bring your lot numbers and a valid photo ID.</p>
       </div>
     </div>
@@ -127,10 +123,10 @@ export default function BookPickupPage() {
 
   return (
     <>
-      <section className="py-12 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <section className="py-12 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid var(--c-border)' }}>
         <div className="max-w-xl mx-auto px-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--c-gold)' }}>Schedule Your Visit</p>
-          <h1 className="font-serif text-4xl font-bold text-white mb-6">Book a Pickup Slot</h1>
+          <h1 className="font-serif text-4xl font-bold mb-6" style={{ color: 'var(--c-text)' }}>Book a <span style={{ color: 'var(--c-gold)' }}>Pickup Slot</span></h1>
           <div className="flex items-center justify-center gap-0">
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center">
@@ -138,17 +134,17 @@ export default function BookPickupPage() {
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                     style={{
-                      background: i <= step ? 'var(--c-accent)' : 'rgba(255,255,255,0.08)',
+                      background: i <= step ? 'var(--c-accent)' : 'rgba(156,110,40,0.08)',
                       color: i <= step ? '#fff' : 'var(--c-muted)',
-                      border: i === step ? '2px solid rgba(255,255,255,0.3)' : '2px solid transparent',
+                      border: i === step ? '2px solid var(--c-border-s)' : '2px solid transparent',
                     }}
                   >
                     {i < step ? <Check size={14} /> : i + 1}
                   </div>
-                  <span className="text-[10px] mt-1.5 uppercase tracking-wider font-medium" style={{ color: i === step ? '#fff' : 'var(--c-muted)' }}>{label}</span>
+                  <span className="text-[10px] mt-1.5 uppercase tracking-wider font-medium" style={{ color: i === step ? 'var(--c-text)' : 'var(--c-muted)' }}>{label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className="w-14 h-px mx-2 mb-4" style={{ background: i < step ? 'var(--c-accent)' : 'rgba(255,255,255,0.1)' }} />
+                  <div className="w-14 h-px mx-2 mb-4" style={{ background: i < step ? 'var(--c-accent)' : 'var(--c-border)' }} />
                 )}
               </div>
             ))}
@@ -158,12 +154,12 @@ export default function BookPickupPage() {
 
       <section className="py-12" style={{ background: 'var(--c-bg)' }}>
         <div className="max-w-lg mx-auto px-4 sm:px-6">
-          <div className="p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
 
             {/* ── STEP 0: Your Info ── */}
             {step === 0 && (
               <form onSubmit={next} className="space-y-4">
-                <h2 className="font-serif text-xl font-bold text-white mb-5">Your Information</h2>
+                <h2 className="font-serif text-xl font-bold mb-5" style={{ color: 'var(--c-text)' }}>Your Information</h2>
                 {[
                   ['name', 'Full Name', 'text', 'John Smith'],
                   ['email', 'Email Address', 'email', 'you@email.com'],
@@ -183,7 +179,7 @@ export default function BookPickupPage() {
             {/* ── STEP 1: Pickup Details ── */}
             {step === 1 && (
               <form onSubmit={next} className="space-y-5">
-                <h2 className="font-serif text-xl font-bold text-white mb-1">Pickup Details</h2>
+                <h2 className="font-serif text-xl font-bold mb-1" style={{ color: 'var(--c-text)' }}>Pickup Details</h2>
 
                 {/* Lot numbers */}
                 <div>
@@ -199,9 +195,9 @@ export default function BookPickupPage() {
                     onClick={switchToPreset}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all"
                     style={{
-                      background: !customMode ? 'rgba(192,57,43,0.15)' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${!customMode ? 'rgba(192,57,43,0.45)' : 'rgba(255,255,255,0.09)'}`,
-                      color: !customMode ? '#fff' : 'var(--c-muted)',
+                      background: !customMode ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
+                      border: `1px solid ${!customMode ? 'var(--c-border-s)' : 'var(--c-border)'}`,
+                      color: !customMode ? 'var(--c-accent)' : 'var(--c-muted)',
                     }}
                   >
                     <CalendarDays size={13} /> Available Slots
@@ -211,9 +207,9 @@ export default function BookPickupPage() {
                     onClick={switchToCustom}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all"
                     style={{
-                      background: customMode ? 'rgba(192,57,43,0.15)' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${customMode ? 'rgba(192,57,43,0.45)' : 'rgba(255,255,255,0.09)'}`,
-                      color: customMode ? '#fff' : 'var(--c-muted)',
+                      background: customMode ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
+                      border: `1px solid ${customMode ? 'var(--c-border-s)' : 'var(--c-border)'}`,
+                      color: customMode ? 'var(--c-accent)' : 'var(--c-muted)',
                     }}
                   >
                     <Clock size={13} /> Custom Date &amp; Time
@@ -226,7 +222,7 @@ export default function BookPickupPage() {
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--c-muted)' }}>
                         Select a Date
-                        <span className="normal-case font-normal ml-2" style={{ color: 'rgba(136,136,136,0.7)' }}>— Tue, Thu &amp; Sat only</span>
+                        <span className="normal-case font-normal ml-2" style={{ color: 'var(--c-muted)', opacity: 0.7 }}>— Tue, Thu &amp; Sat only</span>
                       </label>
                       <div className="grid grid-cols-3 gap-2">
                         {upcomingDates.map(({ label, dow }) => {
@@ -237,9 +233,9 @@ export default function BookPickupPage() {
                               onClick={() => selectDate(label)}
                               className="py-3 px-2 rounded-xl text-center transition-all"
                               style={{
-                                background: selected ? 'rgba(192,57,43,0.15)' : 'rgba(255,255,255,0.04)',
-                                border: `1px solid ${selected ? 'rgba(192,57,43,0.5)' : 'rgba(255,255,255,0.09)'}`,
-                                color: selected ? '#fff' : 'var(--c-muted)',
+                                background: selected ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
+                                border: `1px solid ${selected ? 'var(--c-border-s)' : 'var(--c-border)'}`,
+                                color: selected ? 'var(--c-accent)' : 'var(--c-muted)',
                               }}
                             >
                               <div className="text-[10px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: selected ? 'var(--c-gold)' : 'inherit' }}>
@@ -265,9 +261,9 @@ export default function BookPickupPage() {
                                 onClick={() => selectTime(t)}
                                 className="flex-1 py-3 px-3 rounded-xl text-sm font-medium transition-all"
                                 style={{
-                                  background: selected ? 'rgba(192,57,43,0.15)' : 'rgba(255,255,255,0.04)',
-                                  border: `1px solid ${selected ? 'rgba(192,57,43,0.5)' : 'rgba(255,255,255,0.09)'}`,
-                                  color: selected ? '#fff' : 'var(--c-muted)',
+                                  background: selected ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
+                                  border: `1px solid ${selected ? 'var(--c-border-s)' : 'var(--c-border)'}`,
+                                  color: selected ? 'var(--c-accent)' : 'var(--c-muted)',
                                   minWidth: '7rem',
                                 }}
                               >
@@ -285,7 +281,7 @@ export default function BookPickupPage() {
                 {/* ── Custom mode ── */}
                 {customMode && (
                   <>
-                    <div className="p-3 rounded-xl text-xs leading-relaxed" style={{ background: 'rgba(212,169,64,0.07)', border: '1px solid rgba(212,169,64,0.18)', color: 'var(--c-gold)' }}>
+                    <div className="p-3 rounded-xl text-xs leading-relaxed" style={{ background: 'rgba(156,110,40,0.06)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}>
                       Custom requests are subject to availability. We'll confirm your slot by email within 24 hours.
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -298,10 +294,7 @@ export default function BookPickupPage() {
                           value={customDate}
                           onChange={e => setCustomDate(e.target.value)}
                           className={inputClass}
-                          style={{
-                            ...inputStyle,
-                            colorScheme: 'dark',
-                          }}
+                          style={{ ...inputStyle, colorScheme: 'light' }}
                           onFocus={focusStyle}
                           onBlur={blurStyle}
                         />
@@ -316,10 +309,7 @@ export default function BookPickupPage() {
                           value={customTime}
                           onChange={e => setCustomTime(e.target.value)}
                           className={inputClass}
-                          style={{
-                            ...inputStyle,
-                            colorScheme: 'dark',
-                          }}
+                          style={{ ...inputStyle, colorScheme: 'light' }}
                           onFocus={focusStyle}
                           onBlur={blurStyle}
                         />
@@ -331,7 +321,7 @@ export default function BookPickupPage() {
 
                 {/* Selected slot confirmation banner */}
                 {slotLabel && (
-                  <div className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(212,169,64,0.08)', border: '1px solid rgba(212,169,64,0.2)', color: 'var(--c-gold)' }}>
+                  <div className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(156,110,40,0.08)', border: '1px solid var(--c-border-s)', color: 'var(--c-gold)' }}>
                     ✓ &nbsp;<strong>{slotLabel}</strong>
                   </div>
                 )}
@@ -343,7 +333,7 @@ export default function BookPickupPage() {
                 </div>
 
                 <div className="flex gap-3">
-                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--c-muted)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(156,110,40,0.04)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
                     ← Back
                   </button>
                   <button
@@ -361,8 +351,8 @@ export default function BookPickupPage() {
             {/* ── STEP 2: Confirm ── */}
             {step === 2 && (
               <form onSubmit={submit} className="space-y-4">
-                <h2 className="font-serif text-xl font-bold text-white mb-5">Confirm Your Booking</h2>
-                <div className="space-y-3 p-5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <h2 className="font-serif text-xl font-bold mb-5" style={{ color: 'var(--c-text)' }}>Confirm Your Booking</h2>
+                <div className="space-y-3 p-5 rounded-xl" style={{ background: 'rgba(156,110,40,0.04)', border: '1px solid var(--c-border)' }}>
                   {[
                     ['Name', form.name],
                     ['Email', form.email],
@@ -373,17 +363,17 @@ export default function BookPickupPage() {
                   ].filter(Boolean).map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-4 text-sm">
                       <span className="font-medium flex-shrink-0" style={{ color: 'var(--c-muted)' }}>{k}</span>
-                      <span className="text-white text-right">{v}</span>
+                      <span className="text-right" style={{ color: 'var(--c-text)' }}>{v}</span>
                     </div>
                   ))}
                 </div>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                   {customMode
-                    ? 'Custom slot requests are subject to availability. We\'ll confirm by email within 24 hours.'
+                    ? "Custom slot requests are subject to availability. We'll confirm by email within 24 hours."
                     : 'By confirming, you agree to arrive within your chosen slot and bring valid photo ID. Payment must be completed before items are released.'}
                 </p>
                 <div className="flex gap-3">
-                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--c-muted)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(156,110,40,0.04)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
                     ← Back
                   </button>
                   <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60" style={{ background: 'var(--c-accent)' }}>

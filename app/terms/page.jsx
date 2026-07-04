@@ -2,7 +2,7 @@ export const metadata = { title: 'Terms & Conditions' }
 
 const Section = ({ title, children }) => (
   <div className="mb-10">
-    <h2 className="font-serif text-xl font-bold text-white mb-3">{title}</h2>
+    <h2 className="font-serif text-xl font-bold mb-3" style={{ color: 'var(--c-text)' }}>{title}</h2>
     <div className="text-sm leading-[1.85]" style={{ color: 'var(--c-muted)' }}>{children}</div>
   </div>
 )
@@ -10,17 +10,17 @@ const Section = ({ title, children }) => (
 export default function TermsPage() {
   return (
     <>
-      <section className="py-16 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <section className="py-16 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid var(--c-border)' }}>
         <div className="max-w-3xl mx-auto px-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--c-gold)' }}>Legal</p>
-          <h1 className="font-serif text-4xl font-bold text-white mb-4">Terms & Conditions</h1>
+          <h1 className="font-serif text-4xl font-bold mb-4" style={{ color: 'var(--c-text)' }}>Terms & <span style={{ color: 'var(--c-gold)' }}>Conditions</span></h1>
           <p className="text-sm" style={{ color: 'var(--c-muted)' }}>Last updated: January 2025 · Governed by Ontario law</p>
         </div>
       </section>
 
       <section className="py-16" style={{ background: 'var(--c-bg)' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
 
             <Section title="1. Acceptance of Terms">
               By accessing this website or participating in any El Rachum Auctions LLC auction, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.
@@ -69,7 +69,10 @@ export default function TermsPage() {
             </Section>
 
             <Section title="11. Contact">
-              For questions about these Terms, contact us at <a href="mailto:info@example.ca" className="text-white underline hover:opacity-80">info@example.ca</a>.
+              For questions about these Terms, contact us at{' '}
+              <a href="mailto:contact@elrachumauctions.com" className="underline hover:opacity-80" style={{ color: 'var(--c-accent)' }}>
+                contact@elrachumauctions.com
+              </a>.
             </Section>
           </div>
         </div>

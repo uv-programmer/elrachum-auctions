@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Gavel } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import clsx from 'clsx'
 
 const links = [
@@ -14,6 +14,31 @@ const links = [
   { href: '/careers',  label: 'Careers' },
   { href: '/contact',  label: 'Contact' },
 ]
+
+function Logo() {
+  return (
+    <Link href="/" className="flex items-center gap-2.5">
+      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: 46, height: 46, flexShrink: 0 }}>
+        <circle cx="40" cy="43" r="33" stroke="#9c6e28" strokeWidth="1.5" fill="none"/>
+        <circle cx="40" cy="43" r="28" stroke="#9c6e28" strokeWidth="0.6" fill="none" opacity="0.5"/>
+        <g fill="#9c6e28">
+          <polygon points="25,20 28,12 31,17 34,10 37,17 40,10 43,17 46,10 49,17 52,12 55,20" opacity="0.95"/>
+          <rect x="24" y="19" width="32" height="3" rx="1" opacity="0.9"/>
+        </g>
+        <text x="19" y="60" fontFamily="Georgia, serif" fontSize="36" fontWeight="700" fill="#1e1810" opacity="0.9">E</text>
+        <text x="38" y="60" fontFamily="Georgia, serif" fontSize="36" fontWeight="700" fill="#9c6e28">R</text>
+      </svg>
+      <div>
+        <div className="font-serif text-base font-bold leading-none" style={{ color: 'var(--c-accent)' }}>
+          El Rachum
+        </div>
+        <div className="text-[10px] tracking-widest uppercase" style={{ color: 'var(--c-muted)' }}>
+          Auctions · Canada
+        </div>
+      </div>
+    </Link>
+  )
+}
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -31,36 +56,16 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={clsx(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          scrolled
-            ? 'bg-[#0A0A0A]/95 backdrop-blur-md'
-            : 'bg-transparent'
-        )}
+        className={clsx('fixed top-0 left-0 right-0 z-50 transition-all duration-300', scrolled ? 'backdrop-blur-md' : 'bg-transparent')}
         style={{
           height: 68,
-          borderBottom: scrolled ? '1px solid rgba(255,255,255,0.07)' : 'none',
+          background: scrolled ? 'rgba(250,247,242,0.96)' : 'transparent',
+          borderBottom: scrolled ? '1px solid var(--c-border)' : 'none',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
 
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'var(--c-accent)' }}
-            >
-              <Gavel size={18} className="text-white" />
-            </div>
-            <div>
-              <div className="font-serif text-base font-bold leading-none" style={{ color: 'var(--c-gold)' }}>
-                El Rachum Auctions
-              </div>
-              <div className="text-[10px] tracking-widest uppercase" style={{ color: 'var(--c-muted)' }}>
-                Canada
-              </div>
-            </div>
-          </Link>
+          <Logo />
 
           {/* Desktop links */}
           <ul className="hidden md:flex items-center gap-0.5">
@@ -70,13 +75,13 @@ export default function Navbar() {
                 <li key={href}>
                   <Link
                     href={href}
-                    className={clsx(
-                      'block px-3.5 py-2 rounded-lg text-sm font-medium transition-colors',
-                      active
-                        ? 'bg-white/[0.06]'
-                        : 'text-[#888] hover:text-white hover:bg-white/[0.04]'
-                    )}
-                    style={active ? { color: 'var(--c-accent)' } : {}}
+                    className="block px-3.5 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      color: active ? 'var(--c-accent)' : 'var(--c-muted)',
+                      background: active ? 'rgba(156,110,40,0.08)' : 'transparent',
+                    }}
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'var(--c-text)'; e.currentTarget.style.background = 'rgba(156,110,40,0.06)' } }}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.background = 'transparent' } }}
                   >
                     {label}
                   </Link>
@@ -98,7 +103,7 @@ export default function Navbar() {
 
           {/* Burger */}
           <button
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg"
             style={{ color: 'var(--c-muted)' }}
             onClick={() => setOpen(v => !v)}
             aria-label="Toggle menu"
@@ -112,11 +117,7 @@ export default function Navbar() {
       {open && (
         <div
           className="fixed inset-0 top-[68px] z-40 flex flex-col p-4"
-          style={{
-            background: 'rgba(10,10,10,0.98)',
-            backdropFilter: 'blur(16px)',
-            borderTop: '1px solid rgba(255,255,255,0.07)',
-          }}
+          style={{ background: 'rgba(250,247,242,0.98)', backdropFilter: 'blur(16px)', borderTop: '1px solid var(--c-border)' }}
         >
           <ul className="flex flex-col gap-1 mt-2">
             {links.map(({ href, label }) => {
@@ -125,11 +126,13 @@ export default function Navbar() {
                 <li key={href}>
                   <Link
                     href={href}
-                    className={clsx(
-                      'block px-4 py-3 rounded-xl text-base font-medium transition-colors',
-                      active ? 'bg-white/[0.06]' : 'text-[#888] hover:text-white'
-                    )}
-                    style={active ? { color: 'var(--c-accent)' } : {}}
+                    className="block px-4 py-3 rounded-xl text-base font-medium transition-colors"
+                    style={{
+                      color: active ? 'var(--c-accent)' : 'var(--c-muted)',
+                      background: active ? 'rgba(156,110,40,0.08)' : 'transparent',
+                    }}
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'var(--c-text)'; e.currentTarget.style.background = 'rgba(156,110,40,0.06)' } }}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.background = 'transparent' } }}
                   >
                     {label}
                   </Link>
@@ -137,7 +140,7 @@ export default function Navbar() {
               )
             })}
           </ul>
-          <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--c-border)' }}>
             <Link
               href="/book-pickup"
               className="block w-full text-center px-5 py-3.5 rounded-xl text-sm font-semibold text-white"

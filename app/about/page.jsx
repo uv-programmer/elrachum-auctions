@@ -18,10 +18,10 @@ const howItWorks = [
 export default function AboutPage() {
   return (
     <>
-      <section className="py-16 text-center" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(212,169,64,0.06) 0%, transparent 60%), var(--c-surface)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <section className="py-16 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid var(--c-border)' }}>
         <div className="max-w-3xl mx-auto px-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--c-gold)' }}>Our Story</p>
-          <h1 className="font-serif text-4xl font-bold text-white mb-4">About El Rachum Auctions</h1>
+          <h1 className="font-serif text-4xl font-bold mb-4" style={{ color: 'var(--c-text)' }}>About <span style={{ color: 'var(--c-gold)' }}>El Rachum Auctions</span></h1>
           <p className="text-sm" style={{ color: 'var(--c-muted)' }}>Our story, values, and how we run our auctions</p>
         </div>
       </section>
@@ -31,7 +31,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start mb-14">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--c-gold)' }}>Who We Are</p>
-              <h2 className="font-serif text-3xl font-bold text-white mb-4">Connecting Buyers with <span style={{ color: 'var(--c-gold)' }}>Quality Lots</span></h2>
+              <h2 className="font-serif text-3xl font-bold mb-4" style={{ color: 'var(--c-text)' }}>Connecting Buyers with <span style={{ color: 'var(--c-gold)' }}>Quality Lots</span></h2>
             </div>
             <div>
               <p className="text-sm leading-[1.8] mb-4" style={{ color: 'var(--c-muted)' }}>El Rachum Auctions LLC was founded with a simple idea: give Canadians access to quality merchandise at honest prices through a fair, open auction process.</p>
@@ -41,7 +41,7 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-14">
             {stats.map(({ n, label }) => (
-              <div key={label} className="p-6 rounded-2xl text-center" style={{ background: 'var(--c-card)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div key={label} className="p-6 rounded-2xl text-center" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
                 <div className="font-serif text-3xl font-bold mb-1" style={{ color: 'var(--c-gold)' }}>{n}</div>
                 <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--c-muted)' }}>{label}</div>
               </div>
@@ -49,14 +49,14 @@ export default function AboutPage() {
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--c-gold)' }}>How It Works</p>
-          <h2 className="font-serif text-3xl font-bold text-white mb-4">How Our Auctions <span style={{ color: 'var(--c-gold)' }}>Work</span></h2>
+          <h2 className="font-serif text-3xl font-bold mb-4" style={{ color: 'var(--c-text)' }}>How Our Auctions <span style={{ color: 'var(--c-gold)' }}>Work</span></h2>
           <p className="text-sm leading-[1.75] mb-8 max-w-xl" style={{ color: 'var(--c-muted)' }}>We host auctions every week, each featuring a carefully curated selection of liquidation goods, retail returns, and overstock. The process is designed to be seamless, fair, and accessible to all bidders.</p>
           <div className="space-y-3">
             {howItWorks.map(({ icon, title, desc }) => (
-              <div key={title} className="flex gap-4 items-start p-5 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>{icon}</div>
+              <div key={title} className="flex gap-4 items-start p-5 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: 'rgba(156,110,40,0.08)', border: '1px solid var(--c-border)' }}>{icon}</div>
                 <div>
-                  <h4 className="text-sm font-semibold text-white mb-1">{title}</h4>
+                  <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--c-text)' }}>{title}</h4>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--c-muted)' }}>{desc}</p>
                 </div>
               </div>

@@ -1,14 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Mail, Clock, Phone } from 'lucide-react'
+import { MapPin, Mail, Clock, Phone, Send, CheckCircle } from 'lucide-react'
 
 const info = [
-  { icon: <MapPin size={16} />, label: 'Location', text: '[Client Address], Ontario, Canada' },
-  { icon: <Mail size={16} />,   label: 'Email',    text: 'info@example.ca' },
-  { icon: <Phone size={16} />,  label: 'Phone',    text: '(519) 000-0000' },
+  { icon: <MapPin size={16} />, label: 'Location',     text: '2825 County Road 42, Windsor, Ontario N8V 0A4' },
+  { icon: <Mail size={16} />,   label: 'Email',        text: 'contact@elrachumauctions.com', href: 'mailto:contact@elrachumauctions.com' },
+  { icon: <Phone size={16} />,  label: 'Phone',        text: '(519) 982-3332', href: 'tel:+15199823332' },
   { icon: <Clock size={16} />,  label: 'Pickup Hours', text: 'Tue & Thu: 11AM–5PM · Sat: 10AM–2PM' },
 ]
+
+const inputCls = {
+  background: 'rgba(156,110,40,0.04)',
+  border: '1px solid var(--c-border)',
+  color: 'var(--c-text)',
+}
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
@@ -28,10 +34,10 @@ export default function ContactPage() {
 
   return (
     <>
-      <section className="py-16 text-center" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(192,57,43,0.06) 0%, transparent 60%), var(--c-surface)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <section className="py-16 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid var(--c-border)' }}>
         <div className="max-w-3xl mx-auto px-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--c-gold)' }}>Get In Touch</p>
-          <h1 className="font-serif text-4xl font-bold text-white mb-4">Contact Us</h1>
+          <h1 className="font-serif text-4xl font-bold mb-4" style={{ color: 'var(--c-text)' }}>Contact <span style={{ color: 'var(--c-gold)' }}>Us</span></h1>
           <p className="text-sm" style={{ color: 'var(--c-muted)' }}>Questions about an auction, a pickup, or anything else? We're happy to help.</p>
         </div>
       </section>
@@ -42,27 +48,34 @@ export default function ContactPage() {
 
             {/* Info sidebar */}
             <div className="lg:col-span-2 space-y-4">
-              {info.map(({ icon, label, text }) => (
-                <div key={label} className="flex gap-4 items-start p-5 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--c-gold)' }}>{icon}</div>
+              {info.map(({ icon, label, text, href }) => (
+                <div key={label} className="flex gap-4 items-start p-5 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(156,110,40,0.08)', color: 'var(--c-gold)' }}>{icon}</div>
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c-muted)' }}>{label}</div>
-                    <div className="text-sm text-white">{text}</div>
+                    {href
+                      ? <a href={href} className="text-sm hover:opacity-80 transition-opacity" style={{ color: 'var(--c-text)' }}>{text}</a>
+                      : <div className="text-sm" style={{ color: 'var(--c-text)' }}>{text}</div>
+                    }
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Form */}
-            <div className="lg:col-span-3 p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="lg:col-span-3 p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
               {status === 'sent' ? (
-                <div className="text-center py-8">
-                  <div className="text-3xl mb-3">✅</div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Message Sent!</h3>
-                  <p className="text-sm" style={{ color: 'var(--c-muted)' }}>We'll get back to you within 1-2 business days.</p>
+                <div className="text-center py-8 flex flex-col items-center gap-4">
+                  <CheckCircle size={48} style={{ color: 'var(--c-accent)' }} />
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--c-text)' }}>Message Sent!</h3>
+                  <p className="text-sm" style={{ color: 'var(--c-muted)' }}>We'll get back to you within 1–2 business days.</p>
+                  <button onClick={() => setStatus(null)} className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: 'var(--c-accent)' }}>
+                    Send another message
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={submit} className="space-y-4">
+                  <h2 className="font-serif text-xl font-bold mb-5" style={{ color: 'var(--c-text)' }}>Send a Message</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[['name', 'Name', 'Your name'], ['email', 'Email', 'your@email.com']].map(([id, label, ph]) => (
                       <div key={id}>
@@ -73,10 +86,10 @@ export default function ContactPage() {
                           placeholder={ph}
                           value={form[id]}
                           onChange={e => setForm(p => ({ ...p, [id]: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none transition-all"
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                          onFocus={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'}
-                          onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                          className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                          style={inputCls}
+                          onFocus={e => e.currentTarget.style.borderColor = 'var(--c-accent)'}
+                          onBlur={e => e.currentTarget.style.borderColor = 'var(--c-border)'}
                         />
                       </div>
                     ))}
@@ -87,10 +100,10 @@ export default function ContactPage() {
                       type="text" required placeholder="What's this about?"
                       value={form.subject}
                       onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                      onFocus={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'}
-                      onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+                      style={inputCls}
+                      onFocus={e => e.currentTarget.style.borderColor = 'var(--c-accent)'}
+                      onBlur={e => e.currentTarget.style.borderColor = 'var(--c-border)'}
                     />
                   </div>
                   <div>
@@ -99,19 +112,19 @@ export default function ContactPage() {
                       required rows={5} placeholder="Tell us more…"
                       value={form.message}
                       onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none resize-none"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                      onFocus={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'}
-                      onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
+                      style={inputCls}
+                      onFocus={e => e.currentTarget.style.borderColor = 'var(--c-accent)'}
+                      onBlur={e => e.currentTarget.style.borderColor = 'var(--c-border)'}
                     />
                   </div>
-                  {status === 'error' && <p className="text-xs" style={{ color: 'var(--c-accent)' }}>Something went wrong. Please try again or email us directly.</p>}
+                  {status === 'error' && <p className="text-xs" style={{ color: '#b91c1c' }}>Something went wrong. Please try again or email us directly.</p>}
                   <button
                     type="submit" disabled={loading}
-                    className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                     style={{ background: 'var(--c-accent)' }}
                   >
-                    {loading ? 'Sending…' : 'Send Message'}
+                    {loading ? 'Sending…' : <><Send size={15} /> Send Message</>}
                   </button>
                 </form>
               )}

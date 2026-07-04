@@ -5,32 +5,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
 
 /* ══════════════════════════════════════════════════════════════
-   BRAND TOKENS — edit these 8 lines to fully rebrand the site
+   BRAND TOKENS — Ivory & Brass theme
    ══════════════════════════════════════════════════════════════ */
 :root {
-  --c-bg:           #0A0A0A;           /* page background            */
-  --c-surface:      #111111;           /* alternate section bg       */
-  --c-card:         #1A1A1A;           /* card / panel background    */
-  --c-accent:       #C0392B;           /* primary CTA (Heritage red) */
-  --c-accent-dark:  #A93226;           /* hover state for accent     */
-  --c-gold:         #D4A940;           /* secondary highlight        */
-  --c-muted:        #888888;           /* body / secondary text      */
-  --c-border:       rgba(255,255,255,0.08); /* subtle borders        */
+  --c-bg:           #faf7f2;                   /* ivory page background      */
+  --c-surface:      #f0ead8;                   /* warm cream section bg      */
+  --c-card:         rgba(156,110,40,0.05);     /* card / panel background    */
+  --c-card-h:       rgba(156,110,40,0.09);     /* card hover state           */
+  --c-accent:       #9c6e28;                   /* brass — primary CTA        */
+  --c-accent-dark:  #6a4a18;                   /* hover state for accent     */
+  --c-gold:         #b07c20;                   /* secondary highlight        */
+  --c-text:         #1e1810;                   /* primary text — dark brown  */
+  --c-muted:        #7a6a50;                   /* secondary text             */
+  --c-border:       rgba(156,110,40,0.18);     /* subtle borders             */
+  --c-border-s:     rgba(156,110,40,0.38);     /* strong borders             */
 
-  /* Logo & typography */
   --font-inter:    'Inter', system-ui, sans-serif;
   --font-playfair: 'Playfair Display', Georgia, serif;
 }
 
 /* ── Base ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
-
 body {
   font-family: var(--font-inter);
   background: var(--c-bg);
-  color: #ffffff;
+  color: var(--c-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -38,8 +38,8 @@ body {
 /* ── Scrollbar ─────────────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 5px; }
 ::-webkit-scrollbar-track  { background: var(--c-bg); }
-::-webkit-scrollbar-thumb  { background: #333; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #555; }
+::-webkit-scrollbar-thumb  { background: rgba(156,110,40,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(156,110,40,0.5); }
 
 /* ── HiBid iframe ──────────────────────────────────────────── */
 .hibid-frame {
@@ -51,25 +51,20 @@ body {
 }
 
 /* ── Selection ─────────────────────────────────────────────── */
-::selection {
-  background: var(--c-accent);
-  color: #fff;
-}
+::selection { background: var(--c-accent); color: #fff; }
 
-/* ── Smooth counter animation ──────────────────────────────── */
+/* ── Animations ────────────────────────────────────────────── */
 @keyframes countUp {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .stat-number { animation: countUp 0.6s ease forwards; }
 
-/* ── Fade-in-up for sections ───────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Cookie banner slide-up ────────────────────────────────── */
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
