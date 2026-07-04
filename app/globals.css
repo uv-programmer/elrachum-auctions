@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
+
+/* ══════════════════════════════════════════════════════════════
+   BRAND TOKENS — edit these 8 lines to fully rebrand the site
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --c-bg:           #0A0A0A;           /* page background            */
+  --c-surface:      #111111;           /* alternate section bg       */
+  --c-card:         #1A1A1A;           /* card / panel background    */
+  --c-accent:       #C0392B;           /* primary CTA (Heritage red) */
+  --c-accent-dark:  #A93226;           /* hover state for accent     */
+  --c-gold:         #D4A940;           /* secondary highlight        */
+  --c-muted:        #888888;           /* body / secondary text      */
+  --c-border:       rgba(255,255,255,0.08); /* subtle borders        */
+
+  /* Logo & typography */
+  --font-inter:    'Inter', system-ui, sans-serif;
+  --font-playfair: 'Playfair Display', Georgia, serif;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-inter);
+  background: var(--c-bg);
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: var(--c-bg); }
+::-webkit-scrollbar-thumb  { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* ── HiBid iframe ──────────────────────────────────────────── */
+.hibid-frame {
+  width: 100%;
+  min-height: 800px;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ── Selection ─────────────────────────────────────────────── */
+::selection {
+  background: var(--c-accent);
+  color: #fff;
+}
+
+/* ── Smooth counter animation ──────────────────────────────── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stat-number { animation: countUp 0.6s ease forwards; }
+
+/* ── Fade-in-up for sections ───────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Cookie banner slide-up ────────────────────────────────── */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Nav active link ───────────────────────────────────────── */
+.nav-link-active { color: var(--c-accent) !important; }
