@@ -6,18 +6,28 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request) {
   try {
-    const { name, email, phone, lots, slot, notes } = await request.json()
+    const { name, email, phone, lots, slot, slot_date, slot_time, notes } = await request.json()
 
     if (!name || !email || !phone || !lots || !slot) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Save to Supabase
+    // Save to Supabase — include structured slot_date + slot_time if provided
     const sb = supabaseAdmin()
     if (sb) {
       const { error: dbError } = await sb
         .from('bookings')
-        .insert([{ name, email, phone, lots, slot, notes: notes || '' }])
+        .insert([{
+          name,
+          email,
+          phone,
+          lots,
+          slot,                           // human-readable, e.g. "Tue, Jul 8 · 2:00 PM"
+          slot_date: slot_date || null,   // DATE column, e.g. "2025-07-08"
+          slot_time: slot_time || null,   // TIME column, e.g. "14:00"
+          notes: notes || '',
+        }])
+
       if (dbError) {
         console.error('Supabase insert error:', dbError)
         return NextResponse.json({ error: 'Database error: ' + dbError.message }, { status: 500 })
@@ -47,7 +57,7 @@ export async function POST(request) {
                 ${notes ? `<tr><td style="padding:6px 0;color:#6B7280;font-size:13px;">Notes</td><td style="padding:6px 0;color:#111;font-size:13px;">${notes}</td></tr>` : ''}
               </table>
             </div>
-            <p style="color:#374151;font-size:14px;">Please bring a valid photo ID when you arrive. To reschedule, reply to this email or contact us at <a href="mailto:contact@elrachumauctions.com" style="color:#9c6e28;">contact@elrachumauctions.com</a>.</p>
+            <p style="color:#374151;font-size:14px;">Please bring a valid photo ID when you arrive. To reschedule, contact us at <a href="mailto:contact@elrachumauctions.com" style="color:#9c6e28;">contact@elrachumauctions.com</a>.</p>
             <p style="color:#999;font-size:13px;margin-top:24px;">— El Rachum Auctions LLC</p>
           </div>
         `,

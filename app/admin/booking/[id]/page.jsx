@@ -26,10 +26,8 @@ export default function BookingDetailPage() {
   const handleDelete = async () => {
     if (!confirm('Delete this booking permanently?')) return
     await supabase.from('bookings').delete().eq('id', id)
-    router.push('/admin?tab=bookings')
+    router.push('/admin')
   }
-
-  const handlePrint = () => window.print()
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--c-bg)' }}>
@@ -53,131 +51,146 @@ export default function BookingDetailPage() {
 
   return (
     <>
-      {/* Print styles */}
       <style>{`
+        /* ── Screen: hide site nav/footer on this admin page ── */
+        nav, footer, [data-cookie-banner] {
+          display: none !important;
+        }
+        main {
+          padding-top: 0 !important;
+        }
+
+        /* ── Print: only show the slip ── */
         @media print {
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { background: white !important; margin: 0 !important; }
           .no-print { display: none !important; }
-          .print-card { box-shadow: none !important; border: 1px solid #ddd !important; }
-          body { background: white !important; }
+          .print-slip {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+            border-radius: 8px !important;
+            margin: 0 !important;
+          }
+          .print-letterhead { display: block !important; }
         }
       `}</style>
 
-      <div className="min-h-screen" style={{ background: 'var(--c-bg)' }}>
+      <div className="min-h-screen" style={{ background: '#f5f0e8' }}>
 
-        {/* Header */}
-        <header className="no-print px-4 sm:px-6 lg:px-8 py-4 sticky top-0 z-10" style={{ background: '#1e1810' }}>
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            <button onClick={() => router.push('/admin')} className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
-              <ArrowLeft size={16} /> Back to Dashboard
+        {/* Top bar — hidden on print */}
+        <div className="no-print sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style={{ background: '#1e1810' }}>
+          <button
+            onClick={() => router.push('/admin')}
+            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
+          >
+            <ArrowLeft size={15} /> Back
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-medium text-white"
+              style={{ background: '#9c6e28' }}
+            >
+              <Printer size={14} /> Print
             </button>
-            <div className="flex items-center gap-2">
-              <button onClick={handlePrint}
-                className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg font-medium text-white transition-colors"
-                style={{ background: '#9c6e28' }}>
-                <Printer size={15} /> Print
-              </button>
-              <button onClick={handleDelete}
-                className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg font-medium bg-red-600 hover:bg-red-700 text-white transition-colors">
-                <Trash2 size={15} /> Delete
-              </button>
-            </div>
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+            >
+              <Trash2 size={14} /> Delete
+            </button>
           </div>
-        </header>
+        </div>
 
-        {/* Content */}
-        <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+        {/* Slip */}
+        <div className="px-4 py-6 max-w-xl mx-auto">
 
-          {/* Print header (only shows when printing) */}
-          <div className="hidden print:block mb-8 text-center">
-            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: '#1e1810' }}>El Rachum Auctions LLC</h1>
-            <p style={{ color: '#7a6a50', fontSize: 13 }}>2825 County Road 42, Windsor, Ontario N8V 0A4 · (519) 982-3332</p>
-            <p style={{ color: '#9c6e28', fontSize: 13, marginTop: 4 }}>Pickup Booking Confirmation</p>
+          {/* Print letterhead — hidden on screen, visible when printing */}
+          <div className="print-letterhead mb-6 text-center" style={{ display: 'none' }}>
+            <p style={{ fontFamily: 'Georgia, serif', fontSize: 20, fontWeight: 700, color: '#1e1810', margin: 0 }}>
+              El Rachum Auctions LLC
+            </p>
+            <p style={{ fontSize: 12, color: '#7a6a50', margin: '4px 0 2px' }}>
+              2825 County Road 42, Windsor, Ontario N8V 0A4
+            </p>
+            <p style={{ fontSize: 12, color: '#9c6e28', margin: 0 }}>
+              (519) 982-3332 · contact@elrachumauctions.com
+            </p>
+            <div style={{ borderBottom: '1px solid #e8e0cc', marginTop: 12 }} />
           </div>
 
-          <div className="print-card bg-white rounded-2xl border border-slate-100 overflow-hidden" style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
-
-            {/* Booking header */}
-            <div className="px-8 py-6" style={{ background: '#faf7f2', borderBottom: '1px solid #e8e0cc' }}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#9c6e28' }}>Pickup Booking</p>
-                  <h2 className="font-serif text-2xl font-bold" style={{ color: '#1e1810' }}>{booking.name}</h2>
-                  <p className="text-sm mt-1" style={{ color: '#7a6a50' }}>Booked on {bookedOn}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs uppercase tracking-wider mb-1" style={{ color: '#7a6a50' }}>Booking ID</p>
-                  <p className="font-mono text-xs" style={{ color: '#1e1810' }}>{booking.id.slice(0, 8).toUpperCase()}</p>
-                </div>
-              </div>
+          <div
+            className="print-slip bg-white overflow-hidden"
+            style={{ borderRadius: 16, border: '1px solid #e8e0cc', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}
+          >
+            {/* Card header */}
+            <div className="px-5 py-5" style={{ background: '#faf7f2', borderBottom: '1px solid #e8e0cc' }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#9c6e28' }}>
+                Pickup Booking
+              </p>
+              <p className="font-serif text-xl font-bold" style={{ color: '#1e1810' }}>{booking.name}</p>
+              <p className="text-xs mt-1" style={{ color: '#7a6a50' }}>Booked on {bookedOn}</p>
+              <p className="text-xs mt-1 font-mono" style={{ color: '#b0a090' }}>
+                ID: {booking.id.slice(0, 8).toUpperCase()}
+              </p>
             </div>
 
-            {/* Details grid */}
-            <div className="px-8 py-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Details */}
+            <div className="px-5 py-5 space-y-4">
 
-                <div className="space-y-5">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#7a6a50' }}>Contact</p>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm" style={{ color: '#1e1810' }}>
-                        <Mail size={14} style={{ color: '#9c6e28', flexShrink: 0 }} />
-                        <a href={`mailto:${booking.email}`} style={{ color: '#9c6e28' }}>{booking.email}</a>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm" style={{ color: '#1e1810' }}>
-                        <Phone size={14} style={{ color: '#9c6e28', flexShrink: 0 }} />
-                        <a href={`tel:${booking.phone}`} style={{ color: '#1e1810' }}>{booking.phone}</a>
-                      </div>
-                    </div>
-                  </div>
+              <Row icon={<Mail size={14} />} label="Email">
+                <a href={`mailto:${booking.email}`} style={{ color: '#9c6e28', wordBreak: 'break-all' }}>
+                  {booking.email}
+                </a>
+              </Row>
 
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#7a6a50' }}>Pickup Slot</p>
-                    <div className="flex items-start gap-2">
-                      <Clock size={14} style={{ color: '#9c6e28', flexShrink: 0, marginTop: 2 }} />
-                      <p className="text-sm font-medium" style={{ color: '#1e1810' }}>{booking.slot}</p>
-                    </div>
-                  </div>
-                </div>
+              <Row icon={<Phone size={14} />} label="Phone">
+                <a href={`tel:${booking.phone}`} style={{ color: '#1e1810' }}>{booking.phone}</a>
+              </Row>
 
-                <div className="space-y-5">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#7a6a50' }}>Lot Numbers</p>
-                    <div className="flex items-start gap-2">
-                      <Package size={14} style={{ color: '#9c6e28', flexShrink: 0, marginTop: 2 }} />
-                      <p className="text-sm" style={{ color: '#1e1810' }}>{booking.lots}</p>
-                    </div>
-                  </div>
+              <Row icon={<Clock size={14} />} label="Pickup Slot">
+                <span className="font-medium" style={{ color: '#1e1810' }}>{booking.slot}</span>
+              </Row>
 
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#7a6a50' }}>Pickup Location</p>
-                    <div className="flex items-start gap-2">
-                      <MapPin size={14} style={{ color: '#9c6e28', flexShrink: 0, marginTop: 2 }} />
-                      <p className="text-sm" style={{ color: '#1e1810' }}>2825 County Road 42<br />Windsor, Ontario N8V 0A4</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Row icon={<Package size={14} />} label="Lot Numbers">
+                <span style={{ color: '#1e1810', wordBreak: 'break-word' }}>{booking.lots}</span>
+              </Row>
+
+              <Row icon={<MapPin size={14} />} label="Location">
+                <span style={{ color: '#1e1810' }}>2825 County Road 42, Windsor, Ontario N8V 0A4</span>
+              </Row>
 
               {booking.notes && (
-                <div className="mt-6 pt-6" style={{ borderTop: '1px solid #e8e0cc' }}>
+                <div style={{ paddingTop: 12, borderTop: '1px solid #e8e0cc' }}>
                   <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#7a6a50' }}>Notes</p>
-                  <p className="text-sm leading-relaxed p-4 rounded-xl" style={{ background: '#faf7f2', color: '#1e1810', border: '1px solid #e8e0cc' }}>
+                  <p className="text-sm leading-relaxed px-3 py-3 rounded-xl" style={{ background: '#faf7f2', color: '#1e1810', border: '1px solid #e8e0cc', wordBreak: 'break-word' }}>
                     {booking.notes}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Footer */}
-            <div className="px-8 py-4" style={{ background: '#faf7f2', borderTop: '1px solid #e8e0cc' }}>
-              <p className="text-xs" style={{ color: '#7a6a50' }}>
-                Please bring a valid photo ID and this confirmation. Payment must be completed before items are released. · <span style={{ color: '#9c6e28' }}>contact@elrachumauctions.com</span> · (519) 982-3332
+            {/* Card footer */}
+            <div className="px-5 py-4" style={{ background: '#faf7f2', borderTop: '1px solid #e8e0cc' }}>
+              <p className="text-xs leading-relaxed" style={{ color: '#7a6a50' }}>
+                Please bring a valid photo ID. Payment must be completed before items are released.
               </p>
             </div>
-
           </div>
-        </main>
+        </div>
       </div>
     </>
+  )
+}
+
+function Row({ icon, label, children }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex-shrink-0 mt-0.5" style={{ color: '#9c6e28' }}>{icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: '#7a6a50' }}>{label}</p>
+        <div className="text-sm">{children}</div>
+      </div>
+    </div>
   )
 }

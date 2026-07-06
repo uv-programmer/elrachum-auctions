@@ -19,6 +19,7 @@ export default function CookieBanner() {
 
   return (
     <div
+      data-cookie-banner="true"
       className="fixed bottom-5 left-5 z-[9999] max-w-sm w-[calc(100%-2.5rem)] sm:w-auto"
       style={{
         background: 'rgba(20,20,20,0.97)',

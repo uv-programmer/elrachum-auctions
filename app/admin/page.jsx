@@ -1,9 +1,212 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { LogOut, Trash2, RefreshCw, Lock, Download, TrendingUp, Calendar, Clock, Users, ExternalLink } from 'lucide-react'
+import { LogOut, Trash2, RefreshCw, Lock, Download, TrendingUp, Calendar, Clock, Users, ExternalLink, Plus, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+
+// ── Day names ─────────────────────────────────────────────────
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+// ── Working Hours editor tab ──────────────────────────────────
+function WorkingHoursTab({ db }) {
+  const [schedule, setSchedule]   = useState([])
+  const [breaks, setBreaks]       = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [saving, setSaving]       = useState(null)   // day_of_week being saved
+  const [addBreakDay, setAddBreakDay] = useState(null)
+  const [newBreak, setNewBreak]   = useState({ label: 'Lunch Break', start: '', end: '' })
+  const [toast, setToast]         = useState('')
+
+  useEffect(() => {
+    Promise.all([
+      db.from('working_hours').select('*').order('day_of_week'),
+      db.from('break_hours').select('*').order('day_of_week').order('break_start'),
+    ]).then(([{ data: wh }, { data: br }]) => {
+      setSchedule(wh || [])
+      setBreaks(br || [])
+      setLoading(false)
+    })
+  }, [])
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2500) }
+
+  const updateLocal = (dow, key, value) =>
+    setSchedule(prev => prev.map(d => d.day_of_week === dow ? { ...d, [key]: value } : d))
+
+  const saveDay = async (dow) => {
+    setSaving(dow)
+    const day = schedule.find(d => d.day_of_week === dow)
+    const { error } = await db.from('working_hours').update({
+      is_open: day.is_open,
+      open_time: day.open_time,
+      close_time: day.close_time,
+      slot_duration_minutes: day.slot_duration_minutes,
+      max_per_slot: day.max_per_slot,
+      updated_at: new Date().toISOString(),
+    }).eq('day_of_week', dow)
+    setSaving(null)
+    if (error) alert('Save failed: ' + error.message)
+    else showToast(`${DAY_NAMES[dow]} saved`)
+  }
+
+  const deleteBreak = async (id) => {
+    await db.from('break_hours').delete().eq('id', id)
+    setBreaks(prev => prev.filter(b => b.id !== id))
+  }
+
+  const addBreak = async (dow) => {
+    if (!newBreak.start || !newBreak.end) return
+    const { data, error } = await db.from('break_hours')
+      .insert([{ day_of_week: dow, break_start: newBreak.start, break_end: newBreak.end, label: newBreak.label }])
+      .select()
+    if (error) { alert('Failed: ' + error.message); return }
+    setBreaks(prev => [...prev, data[0]])
+    setAddBreakDay(null)
+    setNewBreak({ label: 'Lunch Break', start: '', end: '' })
+  }
+
+  if (loading) return (
+    <div className="flex justify-center py-16">
+      <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: '#9c6e28', borderTopColor: 'transparent' }} />
+    </div>
+  )
+
+  return (
+    <div className="space-y-4">
+      <div className="mb-2">
+        <h2 className="font-semibold" style={{ color: '#1e1810' }}>Working Hours</h2>
+        <p className="text-slate-400 text-xs mt-0.5">Changes take effect immediately for new bookings.</p>
+      </div>
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg" style={{ background: '#9c6e28' }}>
+          ✓ {toast}
+        </div>
+      )}
+
+      {schedule.map(day => {
+        const dayBreaks = breaks.filter(b => b.day_of_week === day.day_of_week)
+        return (
+          <div key={day.day_of_week} className="bg-white rounded-2xl border border-slate-100 p-5">
+            {/* Day row */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Toggle */}
+              <button
+                onClick={() => updateLocal(day.day_of_week, 'is_open', !day.is_open)}
+                className="relative flex-shrink-0 w-10 h-5 rounded-full transition-colors"
+                style={{ background: day.is_open ? '#9c6e28' : '#e2e8f0' }}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+
+              {/* Day name */}
+              <span className="font-semibold text-sm w-24 flex-shrink-0" style={{ color: '#1e1810' }}>
+                {DAY_NAMES[day.day_of_week]}
+              </span>
+
+              {day.is_open ? (
+                <div className="flex items-center gap-2 flex-wrap flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-slate-400">Open</span>
+                    <input type="time" value={day.open_time?.slice(0, 5) || '09:00'}
+                      onChange={e => updateLocal(day.day_of_week, 'open_time', e.target.value)}
+                      className="text-sm rounded-lg px-2 py-1 border border-slate-200 outline-none focus:border-[#9c6e28]"
+                      style={{ colorScheme: 'light' }} />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-slate-400">Close</span>
+                    <input type="time" value={day.close_time?.slice(0, 5) || '17:00'}
+                      onChange={e => updateLocal(day.day_of_week, 'close_time', e.target.value)}
+                      className="text-sm rounded-lg px-2 py-1 border border-slate-200 outline-none focus:border-[#9c6e28]"
+                      style={{ colorScheme: 'light' }} />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-slate-400">Slot</span>
+                    <select value={day.slot_duration_minutes}
+                      onChange={e => updateLocal(day.day_of_week, 'slot_duration_minutes', Number(e.target.value))}
+                      className="text-sm rounded-lg px-2 py-1 border border-slate-200 outline-none focus:border-[#9c6e28]">
+                      {[15, 20, 30, 45, 60].map(v => <option key={v} value={v}>{v} min</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-slate-400">Max/slot</span>
+                    <select value={day.max_per_slot}
+                      onChange={e => updateLocal(day.day_of_week, 'max_per_slot', Number(e.target.value))}
+                      className="text-sm rounded-lg px-2 py-1 border border-slate-200 outline-none focus:border-[#9c6e28]">
+                      {[1, 2, 3, 4, 5, 6, 8, 10].map(v => <option key={v} value={v}>{v} people</option>)}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-slate-400 flex-1">Closed — no pickups</span>
+              )}
+
+              <button onClick={() => saveDay(day.day_of_week)} disabled={saving === day.day_of_week}
+                className="text-xs font-semibold text-white px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 flex-shrink-0"
+                style={{ background: '#9c6e28' }}>
+                {saving === day.day_of_week ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+
+            {/* Break hours (open days only) */}
+            {day.is_open && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Break Hours</span>
+                  <button onClick={() => setAddBreakDay(addBreakDay === day.day_of_week ? null : day.day_of_week)}
+                    className="flex items-center gap-1 text-xs font-medium transition-colors"
+                    style={{ color: '#9c6e28' }}>
+                    <Plus size={11} /> Add
+                  </button>
+                </div>
+
+                {dayBreaks.length === 0 && addBreakDay !== day.day_of_week && (
+                  <p className="text-xs text-slate-400">No break periods.</p>
+                )}
+
+                <div className="space-y-1.5">
+                  {dayBreaks.map(br => (
+                    <div key={br.id} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: '#fafaf9' }}>
+                      <span className="text-xs font-medium text-slate-600 w-24 flex-shrink-0">{br.label}</span>
+                      <span className="text-xs text-slate-400">{br.break_start?.slice(0, 5)} – {br.break_end?.slice(0, 5)}</span>
+                      <button onClick={() => deleteBreak(br.id)} className="ml-auto text-slate-300 hover:text-red-400 transition-colors">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {addBreakDay === day.day_of_week && (
+                  <div className="flex items-center gap-2 mt-2 flex-wrap p-3 rounded-xl" style={{ background: 'rgba(156,110,40,0.04)', border: '1px solid #e8e0cc' }}>
+                    <input type="text" placeholder="Label" value={newBreak.label}
+                      onChange={e => setNewBreak(p => ({ ...p, label: e.target.value }))}
+                      className="text-sm rounded-lg px-2 py-1.5 border border-slate-200 outline-none w-28" />
+                    <input type="time" value={newBreak.start}
+                      onChange={e => setNewBreak(p => ({ ...p, start: e.target.value }))}
+                      className="text-sm rounded-lg px-2 py-1.5 border border-slate-200 outline-none"
+                      style={{ colorScheme: 'light' }} />
+                    <span className="text-xs text-slate-400">to</span>
+                    <input type="time" value={newBreak.end}
+                      onChange={e => setNewBreak(p => ({ ...p, end: e.target.value }))}
+                      className="text-sm rounded-lg px-2 py-1.5 border border-slate-200 outline-none"
+                      style={{ colorScheme: 'light' }} />
+                    <button onClick={() => addBreak(day.day_of_week)} disabled={!newBreak.start || !newBreak.end}
+                      className="text-xs font-semibold text-white px-3 py-1.5 rounded-lg disabled:opacity-40"
+                      style={{ background: '#9c6e28' }}>
+                      Add
+                    </button>
+                    <button onClick={() => setAddBreakDay(null)} className="text-xs text-slate-400 hover:text-slate-600">Cancel</button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 // ── Spark bar ────────────────────────────────────────────────
 function SparkBar({ value, max, color = '#9c6e28' }) {
@@ -254,7 +457,7 @@ export default function AdminPage() {
       {/* Tab nav */}
       <div className="bg-white border-b border-slate-100 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex">
-          {[['overview', 'Overview'], ['bookings', 'All Bookings']].map(([key, label]) => (
+          {[['overview', 'Overview'], ['bookings', 'All Bookings'], ['hours', 'Working Hours']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`px-5 py-3.5 text-sm font-medium border-b-2 transition-colors ${
                 tab === key ? 'border-[#9c6e28] text-[#9c6e28]' : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -348,6 +551,9 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* ── WORKING HOURS ── */}
+        {tab === 'hours' && <WorkingHoursTab db={supabase} />}
 
         {/* ── ALL BOOKINGS ── */}
         {tab === 'bookings' && (

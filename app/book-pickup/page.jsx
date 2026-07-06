@@ -1,58 +1,30 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Check, CalendarDays, Clock } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Check, CalendarDays, Clock, AlertCircle } from 'lucide-react'
 
 const STEPS = ['Your Info', 'Pickup Details', 'Confirm']
-
-// Pickup schedule: day index (0=Sun) → available time slots
-const SCHEDULE = {
-  2: ['11AM – 1PM', '1PM – 3PM', '3PM – 5PM'],   // Tuesday
-  4: ['11AM – 1PM', '1PM – 3PM', '3PM – 5PM'],   // Thursday
-  6: ['10AM – 12PM', '12PM – 2PM'],               // Saturday
-}
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAY_NAMES  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function getUpcomingDates(weeks = 3) {
+// Fallback if /api/schedule is unavailable
+const FALLBACK_OPEN_DAYS = [2, 4, 6] // Tue, Thu, Sat
+
+function getUpcomingDates(openDayNumbers, weeks = 4) {
   const dates = []
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const start = new Date(today)
-  start.setDate(start.getDate() + 1)
-  for (let d = 0; d < weeks * 7 + 7; d++) {
-    const date = new Date(start)
-    date.setDate(start.getDate() + d)
-    const dow = date.getDay()
-    if (SCHEDULE[dow]) {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const start = new Date(today); start.setDate(start.getDate() + 1)
+  for (let i = 0; dates.length < weeks * openDayNumbers.length && i < 90; i++) {
+    const date = new Date(start); date.setDate(start.getDate() + i)
+    if (openDayNumbers.includes(date.getDay())) {
       dates.push({
-        date,
-        dow,
-        label: `${DAY_NAMES[dow]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`,
-        times: SCHEDULE[dow],
+        dateStr: date.toISOString().split('T')[0], // YYYY-MM-DD
+        dow: date.getDay(),
+        label: `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`,
       })
     }
-    if (dates.length >= weeks * 3) break
   }
-  return dates
-}
-
-function formatCustomSlot(dateStr, timeStr) {
-  if (!dateStr || !timeStr) return ''
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  const dow = DAY_NAMES[date.getDay()]
-  const mon = MONTH_NAMES[date.getMonth()]
-  const [h, min] = timeStr.split(':').map(Number)
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 || 12
-  return `${dow}, ${mon} ${d} · ${h12}:${min.toString().padStart(2, '0')} ${ampm} (custom)`
-}
-
-function getTomorrow() {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
+  return dates.slice(0, weeks * 3)
 }
 
 const inputClass = 'w-full px-4 py-3 rounded-xl text-sm outline-none transition-all'
@@ -60,29 +32,87 @@ const inputStyle = { background: 'rgba(156,110,40,0.04)', border: '1px solid var
 
 export default function BookPickupPage() {
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState({ name: '', email: '', phone: '', lots: '', date: '', time: '', notes: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', lots: '', notes: '' })
+
+  // Schedule from /api/schedule
+  const [openDays, setOpenDays] = useState(null) // null = loading, [] = error/fallback
+
+  // Selected date + live slots
+  const [selectedDate, setSelectedDate] = useState(null)  // 'YYYY-MM-DD'
+  const [slotsData, setSlotsData] = useState(null)        // { isOpen, slots }
+  const [slotsLoading, setSlotsLoading] = useState(false)
+
+  // Selected slot
+  const [selectedSlot, setSelectedSlot] = useState(null)  // { time, timeLabel }
+
+  // Custom mode
   const [customMode, setCustomMode] = useState(false)
   const [customDate, setCustomDate] = useState('')
   const [customTime, setCustomTime] = useState('')
+
+  // Submission
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
-  const upcomingDates = useMemo(() => getUpcomingDates(3), [])
+  // ── Load open days on mount ──────────────────────────────────
+  useEffect(() => {
+    fetch('/api/schedule')
+      .then(r => r.json())
+      .then(data => {
+        if (data.days) {
+          const open = data.days.filter(d => d.is_open).map(d => d.day_of_week)
+          setOpenDays(open.length ? open : FALLBACK_OPEN_DAYS)
+        } else {
+          setOpenDays(FALLBACK_OPEN_DAYS)
+        }
+      })
+      .catch(() => setOpenDays(FALLBACK_OPEN_DAYS))
+  }, [])
 
-  const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
+  // ── Load slots when a date is selected ──────────────────────
+  useEffect(() => {
+    if (!selectedDate || customMode) return
+    setSlotsLoading(true)
+    setSlotsData(null)
+    setSelectedSlot(null)
+    fetch(`/api/slots?date=${selectedDate}`)
+      .then(r => r.json())
+      .then(data => setSlotsData(data))
+      .catch(() => setSlotsData({ isOpen: false, slots: [], error: true }))
+      .finally(() => setSlotsLoading(false))
+  }, [selectedDate, customMode])
 
-  const selectDate = (label) => setForm(p => ({ ...p, date: label, time: '' }))
-  const selectTime = (t) => setForm(p => ({ ...p, time: t }))
+  const upcomingDates = useMemo(
+    () => openDays ? getUpcomingDates(openDays) : [],
+    [openDays]
+  )
 
-  const selectedEntry = upcomingDates.find(d => d.label === form.date)
+  const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
+  const focusStyle = e => (e.currentTarget.style.borderColor = 'var(--c-accent)')
+  const blurStyle  = e => (e.currentTarget.style.borderColor = 'var(--c-border)')
 
-  const slotLabel = customMode
-    ? formatCustomSlot(customDate, customTime)
-    : (form.date && form.time ? `${form.date} · ${form.time}` : '')
+  // Human-readable slot label for display + email
+  const slotLabel = useMemo(() => {
+    if (customMode) {
+      if (!customDate || !customTime) return ''
+      const [y, m, d] = customDate.split('-').map(Number)
+      const date = new Date(y, m - 1, d)
+      const [h, min] = customTime.split(':').map(Number)
+      const ampm = h >= 12 ? 'PM' : 'AM'
+      const h12 = h % 12 || 12
+      return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${d} · ${h12}:${String(min).padStart(2, '0')} ${ampm} (custom request)`
+    }
+    if (!selectedDate || !selectedSlot) return ''
+    const [y, m, d] = selectedDate.split('-').map(Number)
+    const date = new Date(y, m - 1, d)
+    return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${d} · ${selectedSlot.timeLabel}`
+  }, [customMode, customDate, customTime, selectedDate, selectedSlot])
 
   const switchToCustom = () => {
     setCustomMode(true)
-    setForm(p => ({ ...p, date: '', time: '' }))
+    setSelectedDate(null)
+    setSlotsData(null)
+    setSelectedSlot(null)
   }
   const switchToPreset = () => {
     setCustomMode(false)
@@ -90,23 +120,30 @@ export default function BookPickupPage() {
     setCustomTime('')
   }
 
-  const next = (e) => { e.preventDefault(); setStep(s => s + 1) }
+  const next = e => { e.preventDefault(); setStep(s => s + 1) }
   const back = () => setStep(s => s - 1)
 
-  const submit = async (e) => {
+  const submit = async e => {
     e.preventDefault()
     setSubmitting(true)
-    const payload = { ...form, slot: slotLabel }
+    const payload = {
+      ...form,
+      slot: slotLabel,
+      slot_date: customMode ? (customDate || null) : (selectedDate || null),
+      slot_time: customMode ? (customTime || null) : (selectedSlot?.time || null),
+    }
     try {
-      await fetch('/api/book-pickup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      await fetch('/api/book-pickup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
     } catch (_) {}
     setDone(true)
     setSubmitting(false)
   }
 
-  const focusStyle = (e) => (e.currentTarget.style.borderColor = 'var(--c-accent)')
-  const blurStyle = (e) => (e.currentTarget.style.borderColor = 'var(--c-border)')
-
+  // ── Success screen ───────────────────────────────────────────
   if (done) return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--c-bg)' }}>
       <div className="text-center max-w-sm">
@@ -115,7 +152,7 @@ export default function BookPickupPage() {
         </div>
         <h2 className="font-serif text-3xl font-bold mb-3" style={{ color: 'var(--c-text)' }}>Booking Received!</h2>
         <p className="text-sm mb-2" style={{ color: 'var(--c-muted)' }}>A confirmation has been sent to <strong style={{ color: 'var(--c-text)' }}>{form.email}</strong>.</p>
-        <p className="text-sm mb-1" style={{ color: 'var(--c-muted)' }}>Requested slot: <strong style={{ color: 'var(--c-text)' }}>{slotLabel}</strong></p>
+        <p className="text-sm mb-1" style={{ color: 'var(--c-muted)' }}>Slot: <strong style={{ color: 'var(--c-text)' }}>{slotLabel}</strong></p>
         <p className="text-sm" style={{ color: 'var(--c-muted)' }}>Please bring your lot numbers and a valid photo ID.</p>
       </div>
     </div>
@@ -123,22 +160,24 @@ export default function BookPickupPage() {
 
   return (
     <>
+      {/* Hero */}
       <section className="py-12 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid var(--c-border)' }}>
         <div className="max-w-xl mx-auto px-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--c-gold)' }}>Schedule Your Visit</p>
-          <h1 className="font-serif text-4xl font-bold mb-6" style={{ color: 'var(--c-text)' }}>Book a <span style={{ color: 'var(--c-gold)' }}>Pickup Slot</span></h1>
+          <h1 className="font-serif text-4xl font-bold mb-6" style={{ color: 'var(--c-text)' }}>
+            Book a <span style={{ color: 'var(--c-gold)' }}>Pickup Slot</span>
+          </h1>
+          {/* Step progress */}
           <div className="flex items-center justify-center gap-0">
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center">
                 <div className="flex flex-col items-center">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                     style={{
                       background: i <= step ? 'var(--c-accent)' : 'rgba(156,110,40,0.08)',
                       color: i <= step ? '#fff' : 'var(--c-muted)',
                       border: i === step ? '2px solid var(--c-border-s)' : '2px solid transparent',
-                    }}
-                  >
+                    }}>
                     {i < step ? <Check size={14} /> : i + 1}
                   </div>
                   <span className="text-[10px] mt-1.5 uppercase tracking-wider font-medium" style={{ color: i === step ? 'var(--c-text)' : 'var(--c-muted)' }}>{label}</span>
@@ -154,20 +193,21 @@ export default function BookPickupPage() {
 
       <section className="py-12" style={{ background: 'var(--c-bg)' }}>
         <div className="max-w-lg mx-auto px-4 sm:px-6">
-          <div className="p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
+          <div className="p-6 sm:p-8 rounded-2xl" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
 
             {/* ── STEP 0: Your Info ── */}
             {step === 0 && (
               <form onSubmit={next} className="space-y-4">
                 <h2 className="font-serif text-xl font-bold mb-5" style={{ color: 'var(--c-text)' }}>Your Information</h2>
                 {[
-                  ['name', 'Full Name', 'text', 'John Smith'],
-                  ['email', 'Email Address', 'email', 'you@email.com'],
-                  ['phone', 'Phone Number', 'tel', '(519) 000-0000'],
+                  ['name',  'Full Name',      'text',  'John Smith'],
+                  ['email', 'Email Address',   'email', 'you@email.com'],
+                  ['phone', 'Phone Number',    'tel',   '(519) 000-0000'],
                 ].map(([k, label, type, ph]) => (
                   <div key={k}>
                     <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--c-muted)' }}>{label}</label>
-                    <input type={type} required placeholder={ph} value={form[k]} onChange={set(k)} className={inputClass} style={{ ...inputStyle }} onFocus={focusStyle} onBlur={blurStyle} />
+                    <input type={type} required placeholder={ph} value={form[k]} onChange={set(k)}
+                      className={inputClass} style={{ ...inputStyle }} onFocus={focusStyle} onBlur={blurStyle} />
                   </div>
                 ))}
                 <button type="submit" className="w-full py-3 mt-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ background: 'var(--c-accent)' }}>
@@ -184,95 +224,144 @@ export default function BookPickupPage() {
                 {/* Lot numbers */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--c-muted)' }}>Lot Numbers</label>
-                  <input type="text" required placeholder="e.g. 1042, 1043, 1098" value={form.lots} onChange={set('lots')} className={inputClass} style={{ ...inputStyle }} onFocus={focusStyle} onBlur={blurStyle} />
+                  <input type="text" required placeholder="e.g. 1042, 1043, 1098" value={form.lots} onChange={set('lots')}
+                    className={inputClass} style={{ ...inputStyle }} onFocus={focusStyle} onBlur={blurStyle} />
                   <p className="text-xs mt-1.5" style={{ color: 'var(--c-muted)' }}>Separate multiple lot numbers with commas.</p>
                 </div>
 
                 {/* Mode toggle */}
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={switchToPreset}
+                  <button type="button" onClick={switchToPreset}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all"
                     style={{
                       background: !customMode ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
                       border: `1px solid ${!customMode ? 'var(--c-border-s)' : 'var(--c-border)'}`,
                       color: !customMode ? 'var(--c-accent)' : 'var(--c-muted)',
-                    }}
-                  >
+                    }}>
                     <CalendarDays size={13} /> Available Slots
                   </button>
-                  <button
-                    type="button"
-                    onClick={switchToCustom}
+                  <button type="button" onClick={switchToCustom}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all"
                     style={{
                       background: customMode ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
                       border: `1px solid ${customMode ? 'var(--c-border-s)' : 'var(--c-border)'}`,
                       color: customMode ? 'var(--c-accent)' : 'var(--c-muted)',
-                    }}
-                  >
-                    <Clock size={13} /> Custom Date &amp; Time
+                    }}>
+                    <Clock size={13} /> Custom Request
                   </button>
                 </div>
 
                 {/* ── Preset mode ── */}
                 {!customMode && (
                   <>
+                    {/* Date grid */}
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--c-muted)' }}>
                         Select a Date
-                        <span className="normal-case font-normal ml-2" style={{ color: 'var(--c-muted)', opacity: 0.7 }}>— Tue, Thu &amp; Sat only</span>
+                        {openDays === null && <span className="normal-case font-normal ml-2 opacity-60">Loading…</span>}
                       </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {upcomingDates.map(({ label, dow }) => {
-                          const selected = form.date === label
-                          return (
-                            <button
-                              key={label} type="button"
-                              onClick={() => selectDate(label)}
-                              className="py-3 px-2 rounded-xl text-center transition-all"
-                              style={{
-                                background: selected ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
-                                border: `1px solid ${selected ? 'var(--c-border-s)' : 'var(--c-border)'}`,
-                                color: selected ? 'var(--c-accent)' : 'var(--c-muted)',
-                              }}
-                            >
-                              <div className="text-[10px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: selected ? 'var(--c-gold)' : 'inherit' }}>
-                                {DAY_NAMES[dow]}
-                              </div>
-                              <div className="text-xs font-medium leading-tight">{label.split(', ')[1]}</div>
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <input type="text" required={!customMode} value={form.date} readOnly style={{ opacity: 0, height: 0, padding: 0, position: 'absolute' }} tabIndex={-1} />
-                    </div>
 
-                    {selectedEntry && (
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--c-muted)' }}>Select a Time</label>
-                        <div className="flex gap-2 flex-wrap">
-                          {selectedEntry.times.map(t => {
-                            const selected = form.time === t
+                      {openDays !== null && upcomingDates.length === 0 && (
+                        <div className="flex items-center gap-2 text-xs py-3 px-4 rounded-xl" style={{ background: 'rgba(156,110,40,0.06)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}>
+                          <AlertCircle size={14} style={{ color: 'var(--c-accent)' }} />
+                          No pickup dates available. Please check back later or use Custom Request.
+                        </div>
+                      )}
+
+                      {openDays === null ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="py-3 rounded-xl animate-pulse" style={{ background: 'rgba(156,110,40,0.06)', height: 60 }} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2">
+                          {upcomingDates.map(({ dateStr, dow, label }) => {
+                            const selected = selectedDate === dateStr
                             return (
-                              <button
-                                key={t} type="button"
-                                onClick={() => selectTime(t)}
-                                className="flex-1 py-3 px-3 rounded-xl text-sm font-medium transition-all"
+                              <button key={dateStr} type="button" onClick={() => setSelectedDate(dateStr)}
+                                className="py-3 px-2 rounded-xl text-center transition-all"
                                 style={{
                                   background: selected ? 'rgba(156,110,40,0.10)' : 'rgba(156,110,40,0.04)',
                                   border: `1px solid ${selected ? 'var(--c-border-s)' : 'var(--c-border)'}`,
                                   color: selected ? 'var(--c-accent)' : 'var(--c-muted)',
-                                  minWidth: '7rem',
-                                }}
-                              >
-                                {t}
+                                }}>
+                                <div className="text-[10px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: selected ? 'var(--c-gold)' : 'inherit' }}>
+                                  {DAY_NAMES[dow]}
+                                </div>
+                                <div className="text-xs font-medium leading-tight">{label.split(', ')[1]}</div>
                               </button>
                             )
                           })}
                         </div>
-                        <input type="text" required={!customMode} value={form.time} readOnly style={{ opacity: 0, height: 0, padding: 0, position: 'absolute' }} tabIndex={-1} />
+                      )}
+                      {/* Hidden required input to enforce selection */}
+                      <input type="text" required={!customMode} value={selectedDate || ''} readOnly
+                        style={{ opacity: 0, height: 0, padding: 0, position: 'absolute' }} tabIndex={-1} />
+                    </div>
+
+                    {/* Slot grid */}
+                    {selectedDate && (
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--c-muted)' }}>
+                          Select a Time Slot
+                        </label>
+
+                        {slotsLoading && (
+                          <div className="grid grid-cols-3 gap-2">
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                              <div key={i} className="py-4 rounded-xl animate-pulse" style={{ background: 'rgba(156,110,40,0.06)' }} />
+                            ))}
+                          </div>
+                        )}
+
+                        {!slotsLoading && slotsData && !slotsData.isOpen && (
+                          <div className="flex items-center gap-2 text-xs py-3 px-4 rounded-xl" style={{ background: 'rgba(156,110,40,0.06)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}>
+                            <AlertCircle size={14} style={{ color: 'var(--c-accent)' }} />
+                            No pickups scheduled for this date. Please choose another day.
+                          </div>
+                        )}
+
+                        {!slotsLoading && slotsData?.isOpen && (
+                          <div className="grid grid-cols-3 gap-2">
+                            {slotsData.slots.map(slot => {
+                              const selected = selectedSlot?.time === slot.time
+                              const full = !slot.available
+                              return (
+                                <button
+                                  key={slot.time}
+                                  type="button"
+                                  disabled={full}
+                                  onClick={() => !full && setSelectedSlot(slot)}
+                                  className="py-3 px-2 rounded-xl text-center transition-all relative"
+                                  style={{
+                                    background: full
+                                      ? 'rgba(0,0,0,0.03)'
+                                      : selected
+                                        ? 'rgba(156,110,40,0.12)'
+                                        : 'rgba(156,110,40,0.04)',
+                                    border: `1px solid ${selected ? 'var(--c-border-s)' : 'var(--c-border)'}`,
+                                    color: full ? '#ccc' : selected ? 'var(--c-accent)' : 'var(--c-muted)',
+                                    cursor: full ? 'not-allowed' : 'pointer',
+                                    opacity: full ? 0.6 : 1,
+                                  }}>
+                                  <div className="text-xs font-semibold">{slot.timeLabel}</div>
+                                  {full ? (
+                                    <div className="text-[10px] mt-0.5 font-medium" style={{ color: '#bbb' }}>Full</div>
+                                  ) : (
+                                    <div className="text-[10px] mt-0.5" style={{ color: selected ? 'var(--c-gold)' : 'var(--c-muted)', opacity: 0.7 }}>
+                                      {slot.max - slot.booked} left
+                                    </div>
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {/* Hidden required input to enforce slot selection */}
+                        <input type="text" required={!customMode && !!selectedDate} value={selectedSlot?.time || ''} readOnly
+                          style={{ opacity: 0, height: 0, padding: 0, position: 'absolute' }} tabIndex={-1} />
                       </div>
                     )}
                   </>
@@ -287,39 +376,24 @@ export default function BookPickupPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--c-muted)' }}>Date</label>
-                        <input
-                          type="date"
-                          required={customMode}
-                          min={getTomorrow()}
-                          value={customDate}
-                          onChange={e => setCustomDate(e.target.value)}
-                          className={inputClass}
-                          style={{ ...inputStyle, colorScheme: 'light' }}
-                          onFocus={focusStyle}
-                          onBlur={blurStyle}
-                        />
+                        <input type="date" required={customMode}
+                          min={(() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0] })()}
+                          value={customDate} onChange={e => setCustomDate(e.target.value)}
+                          className={inputClass} style={{ ...inputStyle, colorScheme: 'light' }}
+                          onFocus={focusStyle} onBlur={blurStyle} />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--c-muted)' }}>Time</label>
-                        <input
-                          type="time"
-                          required={customMode}
-                          min="09:00"
-                          max="18:00"
-                          value={customTime}
-                          onChange={e => setCustomTime(e.target.value)}
-                          className={inputClass}
-                          style={{ ...inputStyle, colorScheme: 'light' }}
-                          onFocus={focusStyle}
-                          onBlur={blurStyle}
-                        />
-                        <p className="text-xs mt-1" style={{ color: 'var(--c-muted)' }}>Between 9 AM and 6 PM</p>
+                        <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--c-muted)' }}>Preferred Time</label>
+                        <input type="time" required={customMode} min="09:00" max="18:00"
+                          value={customTime} onChange={e => setCustomTime(e.target.value)}
+                          className={inputClass} style={{ ...inputStyle, colorScheme: 'light' }}
+                          onFocus={focusStyle} onBlur={blurStyle} />
                       </div>
                     </div>
                   </>
                 )}
 
-                {/* Selected slot confirmation banner */}
+                {/* Selected slot banner */}
                 {slotLabel && (
                   <div className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(156,110,40,0.08)', border: '1px solid var(--c-border-s)', color: 'var(--c-gold)' }}>
                     ✓ &nbsp;<strong>{slotLabel}</strong>
@@ -329,19 +403,20 @@ export default function BookPickupPage() {
                 {/* Notes */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--c-muted)' }}>Notes (optional)</label>
-                  <textarea rows={3} placeholder="Large items, accessibility needs, or other requests…" value={form.notes} onChange={set('notes')} className={inputClass + ' resize-none'} style={{ ...inputStyle }} onFocus={focusStyle} onBlur={blurStyle} />
+                  <textarea rows={3} placeholder="Large items, accessibility needs, or other requests…"
+                    value={form.notes} onChange={set('notes')}
+                    className={inputClass + ' resize-none'} style={{ ...inputStyle }}
+                    onFocus={focusStyle} onBlur={blurStyle} />
                 </div>
 
                 <div className="flex gap-3">
-                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(156,110,40,0.04)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
+                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium"
+                    style={{ background: 'rgba(156,110,40,0.04)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
                     ← Back
                   </button>
-                  <button
-                    type="submit"
-                    disabled={!slotLabel}
+                  <button type="submit" disabled={!slotLabel}
                     className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-                    style={{ background: 'var(--c-accent)' }}
-                  >
+                    style={{ background: 'var(--c-accent)' }}>
                     Review →
                   </button>
                 </div>
@@ -354,16 +429,16 @@ export default function BookPickupPage() {
                 <h2 className="font-serif text-xl font-bold mb-5" style={{ color: 'var(--c-text)' }}>Confirm Your Booking</h2>
                 <div className="space-y-3 p-5 rounded-xl" style={{ background: 'rgba(156,110,40,0.04)', border: '1px solid var(--c-border)' }}>
                   {[
-                    ['Name', form.name],
-                    ['Email', form.email],
-                    ['Phone', form.phone],
-                    ['Lots', form.lots],
+                    ['Name',        form.name],
+                    ['Email',       form.email],
+                    ['Phone',       form.phone],
+                    ['Lots',        form.lots],
                     ['Pickup Slot', slotLabel],
                     form.notes && ['Notes', form.notes],
                   ].filter(Boolean).map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-4 text-sm">
                       <span className="font-medium flex-shrink-0" style={{ color: 'var(--c-muted)' }}>{k}</span>
-                      <span className="text-right" style={{ color: 'var(--c-text)' }}>{v}</span>
+                      <span className="text-right break-words" style={{ color: 'var(--c-text)' }}>{v}</span>
                     </div>
                   ))}
                 </div>
@@ -373,10 +448,13 @@ export default function BookPickupPage() {
                     : 'By confirming, you agree to arrive within your chosen slot and bring valid photo ID. Payment must be completed before items are released.'}
                 </p>
                 <div className="flex gap-3">
-                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(156,110,40,0.04)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
+                  <button type="button" onClick={back} className="flex-1 py-3 rounded-xl text-sm font-medium"
+                    style={{ background: 'rgba(156,110,40,0.04)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
                     ← Back
                   </button>
-                  <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60" style={{ background: 'var(--c-accent)' }}>
+                  <button type="submit" disabled={submitting}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                    style={{ background: 'var(--c-accent)' }}>
                     {submitting ? 'Booking…' : 'Confirm Booking'}
                   </button>
                 </div>
