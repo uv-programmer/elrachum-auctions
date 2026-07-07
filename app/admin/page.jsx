@@ -94,10 +94,13 @@ function WorkingHoursTab({ db }) {
               {/* Toggle */}
               <button
                 onClick={() => updateLocal(day.day_of_week, 'is_open', !day.is_open)}
-                className="relative flex-shrink-0 w-10 h-5 rounded-full transition-colors"
+                className="relative flex-shrink-0 w-10 h-5 rounded-full transition-colors overflow-hidden"
                 style={{ background: day.is_open ? '#9c6e28' : '#e2e8f0' }}
               >
-                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                <span
+                  className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+                  style={{ left: day.is_open ? '22px' : '2px' }}
+                />
               </button>
 
               {/* Day name */}
