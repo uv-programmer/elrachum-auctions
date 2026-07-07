@@ -9,6 +9,12 @@ const DAY_NAMES  = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Fri
 const DAY_SHORT  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+function getTomorrow() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+}
+
 // Generate the next `count` open dates starting from tomorrow
 function getUpcomingOpenDates(openDows, count = 12) {
   const dates = []
@@ -341,6 +347,46 @@ export default function BookPickupPage() {
                           </button>
                         )
                       })}
+
+                      {/* Custom date picker pill */}
+                      <label
+                        style={{
+                          padding: '7px 14px',
+                          borderRadius: 20,
+                          border: selectedDate && !openDates.some(d => formatDateKey(d) === formatDateKey(selectedDate))
+                            ? '2px solid var(--c-accent)'
+                            : '1px dashed var(--c-border)',
+                          background: selectedDate && !openDates.some(d => formatDateKey(d) === formatDateKey(selectedDate))
+                            ? 'rgba(156,110,40,0.10)'
+                            : 'transparent',
+                          color: selectedDate && !openDates.some(d => formatDateKey(d) === formatDateKey(selectedDate))
+                            ? 'var(--c-gold)'
+                            : 'var(--c-muted)',
+                          fontSize: 13,
+                          fontWeight: selectedDate && !openDates.some(d => formatDateKey(d) === formatDateKey(selectedDate)) ? 600 : 400,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          transition: 'all 0.15s',
+                          userSelect: 'none',
+                        }}
+                      >
+                        <span>📅</span>
+                        {selectedDate && !openDates.some(d => formatDateKey(d) === formatDateKey(selectedDate))
+                          ? formatDayPill(selectedDate)
+                          : 'Pick a date'}
+                        <input
+                          type="date"
+                          min={getTomorrow()}
+                          style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                          onChange={e => {
+                            if (!e.target.value) return
+                            const [y, m, d] = e.target.value.split('-').map(Number)
+                            setSelectedDate(new Date(y, m - 1, d))
+                          }}
+                        />
+                      </label>
                     </div>
                   )}
                 </div>
@@ -369,8 +415,10 @@ export default function BookPickupPage() {
                         <span className="text-sm">Loading slots…</span>
                       </div>
                     ) : slots && slots.length === 0 ? (
-                      <div className="py-6 text-center">
-                        <p className="text-sm" style={{ color: 'var(--c-muted)' }}>No slots available for this day.</p>
+                      <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-xs leading-relaxed"
+                        style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.3)', color: '#92400e' }}>
+                        <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+                        We don't typically do pickups on {DAY_NAMES[selectedDate.getDay()]}s. We'll contact you to arrange an alternative time.
                       </div>
                     ) : slots ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(105px, 1fr))', gap: 8 }}>
