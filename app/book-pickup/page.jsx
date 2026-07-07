@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Check, AlertTriangle, Loader2 } from 'lucide-react'
 
 const STEPS = ['Your Info', 'Pickup Details', 'Confirm']
@@ -78,20 +79,36 @@ function CapDots({ booked, max, full }) {
 }
 
 export default function BookPickupPage() {
+  const router = useRouter()
   const [step, setStep]   = useState(0)
   const [form, setForm]   = useState({ name: '', email: '', phone: '', lots: '', notes: '' })
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone]   = useState(false)
 
   // Schedule
-  const [schedule, setSchedule]     = useState(null)   // array of day configs
-  const [openDates, setOpenDates]   = useState([])     // Date objects for day pills
+  const [schedule, setSchedule]     = useState(null)
+  const [openDates, setOpenDates]   = useState([])
 
   // Selection
-  const [selectedDate, setSelectedDate] = useState(null)   // Date object
-  const [slots, setSlots]               = useState(null)   // null=not loaded, []= loaded
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [slots, setSlots]               = useState(null)
   const [loadingSlots, setLoadingSlots] = useState(false)
-  const [selectedSlot, setSelectedSlot] = useState(null)   // slot object from API
+  const [selectedSlot, setSelectedSlot] = useState(null)
+
+  const resetAll = useCallback(() => {
+    setStep(0)
+    setForm({ name: '', email: '', phone: '', lots: '', notes: '' })
+    setSelectedDate(null)
+    setSelectedSlot(null)
+    setSlots(null)
+    setDone(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  // ── Scroll to top on every step change ─────────────────────
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
 
   // ── Load schedule once on mount ─────────────────────────────
   useEffect(() => {
@@ -136,7 +153,23 @@ export default function BookPickupPage() {
     ? `${formatDayPill(selectedDate)} · ${fmt12(selectedSlot.time)}`
     : ''
 
-  const next = e => { e.preventDefault(); setStep(s => s + 1) }
+  const next = e => {
+    e.preventDefault()
+    // On step 1, validate lots + slot before advancing
+    if (step === 1) {
+      if (!form.lots.trim()) {
+        const lotsEl = document.getElementById('lots-input')
+        if (lotsEl) { lotsEl.focus(); lotsEl.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
+        return
+      }
+      if (!selectedSlot) {
+        const gridEl = document.getElementById('slot-grid')
+        if (gridEl) gridEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        return
+      }
+    }
+    setStep(s => s + 1)
+  }
   const back = () => setStep(s => s - 1)
 
   const submit = async e => {
@@ -173,9 +206,16 @@ export default function BookPickupPage() {
         <p className="text-sm mb-1" style={{ color: 'var(--c-muted)' }}>
           Slot: <strong style={{ color: 'var(--c-text)' }}>{slotLabel}</strong>
         </p>
-        <p className="text-sm" style={{ color: 'var(--c-muted)' }}>
+        <p className="text-sm mb-6" style={{ color: 'var(--c-muted)' }}>
           Please bring your lot numbers and a valid photo ID.
         </p>
+        <button
+          onClick={resetAll}
+          className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          style={{ background: 'var(--c-accent)' }}
+        >
+          Book Another Pickup
+        </button>
       </div>
     </div>
   )
@@ -258,7 +298,7 @@ export default function BookPickupPage() {
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
                     style={{ color: 'var(--c-muted)' }}>Lot Numbers</label>
-                  <input type="text" required placeholder="e.g. 1042, 1043, 1098"
+                  <input id="lots-input" type="text" required placeholder="e.g. 1042, 1043, 1098"
                     value={form.lots} onChange={set('lots')}
                     className={inputClass} style={{ ...inputStyle }}
                     onFocus={focusStyle} onBlur={blurStyle} />
@@ -307,7 +347,7 @@ export default function BookPickupPage() {
 
                 {/* Slot grid */}
                 {selectedDate && (
-                  <div>
+                  <div id="slot-grid">
                     <label className="block text-xs font-semibold uppercase tracking-wider mb-1"
                       style={{ color: 'var(--c-muted)' }}>
                       {DAY_NAMES[selectedDate.getDay()]} · {MONTH_NAMES[selectedDate.getMonth()]} {selectedDate.getDate()}

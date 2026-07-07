@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -42,7 +42,17 @@ function Logo() {
 
 export default function Navbar() {
   const pathname = usePathname()
+  const router   = useRouter()
   const [open, setOpen] = useState(false)
+
+  // If already on /book-pickup, refresh the route so the form resets
+  function handleBookPickup(e) {
+    if (pathname === '/book-pickup') {
+      e.preventDefault()
+      router.refresh()
+    }
+    setOpen(false)
+  }
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -94,6 +104,7 @@ export default function Navbar() {
           <div className="hidden md:block">
             <Link
               href="/book-pickup"
+              onClick={handleBookPickup}
               className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
               style={{ background: 'var(--c-accent)' }}
             >
@@ -143,6 +154,7 @@ export default function Navbar() {
           <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--c-border)' }}>
             <Link
               href="/book-pickup"
+              onClick={handleBookPickup}
               className="block w-full text-center px-5 py-3.5 rounded-xl text-sm font-semibold text-white"
               style={{ background: 'var(--c-accent)' }}
             >
