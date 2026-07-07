@@ -348,50 +348,32 @@ export default function BookPickupPage() {
                         )
                       })}
 
-                      {/* Custom date picker pill — input covers the label so iOS tap works */}
-                      {(() => {
-                        const isCustomSelected = selectedDate && !openDates.some(d => formatDateKey(d) === formatDateKey(selectedDate))
-                        return (
-                          <label
-                            style={{
-                              position: 'relative',
-                              padding: '7px 14px',
-                              borderRadius: 20,
-                              border: isCustomSelected ? '2px solid var(--c-accent)' : '1px dashed var(--c-border)',
-                              background: isCustomSelected ? 'rgba(156,110,40,0.10)' : 'transparent',
-                              color: isCustomSelected ? 'var(--c-gold)' : 'var(--c-muted)',
-                              fontSize: 13,
-                              fontWeight: isCustomSelected ? 600 : 400,
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 5,
-                              userSelect: 'none',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            <span>📅</span>
-                            {isCustomSelected ? formatDayPill(selectedDate) : 'Pick a date'}
-                            <input
-                              type="date"
-                              min={getTomorrow()}
-                              onChange={e => {
-                                if (!e.target.value) return
-                                const [y, m, d] = e.target.value.split('-').map(Number)
-                                setSelectedDate(new Date(y, m - 1, d))
-                              }}
-                              style={{
-                                position: 'absolute',
-                                inset: 0,
-                                opacity: 0,
-                                width: '100%',
-                                height: '100%',
-                                cursor: 'pointer',
-                              }}
-                            />
-                          </label>
-                        )
-                      })()}
+                    </div>
+                  )}
+
+                  {/* Custom date — full-width visible input, reliable on iOS */}
+                  {openDates.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <p style={{ fontSize: 11, color: 'var(--c-muted)', marginBottom: 6 }}>
+                        Or pick a specific date:
+                      </p>
+                      <input
+                        type="date"
+                        min={getTomorrow()}
+                        onChange={e => {
+                          if (!e.target.value) return
+                          const [y, m, d] = e.target.value.split('-').map(Number)
+                          setSelectedDate(new Date(y, m - 1, d))
+                        }}
+                        className={inputClass}
+                        style={{
+                          ...inputStyle,
+                          colorScheme: 'light',
+                          display: 'block',
+                          width: '100%',
+                          minHeight: 48,
+                        }}
+                      />
                     </div>
                   )}
                 </div>
