@@ -12,7 +12,7 @@ const howItWorks = [
   { icon: '🔨', title: 'Starting Bids', desc: 'All lots start at an accessible base bid, giving every bidder a fair opportunity to participate. Bid increments remain consistent and transparent throughout the auction.' },
   { icon: '🤖', title: 'Proxy (Max) Bidding', desc: 'Enter your maximum bid and our system places bids on your behalf — so you never miss a winning opportunity even when you are away.' },
   { icon: '⏳', title: 'Soft Close Feature', desc: 'If a bid is placed in the final minutes of a lot closing, the timer automatically extends — giving all bidders a fair chance to respond and preventing bid sniping.' },
-  { icon: '🍁', title: 'Proudly Canadian', desc: 'Based in Ontario, we serve bidders across Canada. All transactions are in CAD and we understand Canadian buyer needs deeply.' },
+  { icon: '🍁', title: 'Rooted in Windsor', desc: 'Based in Windsor, Ontario, we serve bidders across Canada. All transactions are in CAD and we understand Canadian buyer needs.' },
 ]
 
 export default function AboutPage() {

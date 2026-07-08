@@ -65,6 +65,16 @@ export default function HomePage() {
           <p className="text-lg max-w-xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
             Browse hundreds of live auction lots — electronics, furniture, tools, and more — at liquidation prices. Available to bid from anywhere in Canada.
           </p>
+          {/* Bible quote */}
+          <blockquote className="max-w-2xl mx-auto mb-10 px-6">
+            <p className="font-serif text-base italic leading-relaxed mb-2" style={{ color: 'var(--c-muted)' }}>
+              "The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning; great is your faithfulness."
+            </p>
+            <cite className="text-xs font-semibold uppercase tracking-widest not-italic" style={{ color: 'var(--c-gold)' }}>
+              — Lamentations 3:22–23
+            </cite>
+          </blockquote>
+
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/auctions"

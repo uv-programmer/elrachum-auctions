@@ -17,25 +17,12 @@ const links = [
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2.5">
-      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: 46, height: 46, flexShrink: 0 }}>
-        <circle cx="40" cy="43" r="33" stroke="#9c6e28" strokeWidth="1.5" fill="none"/>
-        <circle cx="40" cy="43" r="28" stroke="#9c6e28" strokeWidth="0.6" fill="none" opacity="0.5"/>
-        <g fill="#9c6e28">
-          <polygon points="25,20 28,12 31,17 34,10 37,17 40,10 43,17 46,10 49,17 52,12 55,20" opacity="0.95"/>
-          <rect x="24" y="19" width="32" height="3" rx="1" opacity="0.9"/>
-        </g>
-        <text x="19" y="60" fontFamily="Georgia, serif" fontSize="36" fontWeight="700" fill="#1e1810" opacity="0.9">E</text>
-        <text x="38" y="60" fontFamily="Georgia, serif" fontSize="36" fontWeight="700" fill="#9c6e28">R</text>
-      </svg>
-      <div>
-        <div className="font-serif text-base font-bold leading-none" style={{ color: 'var(--c-accent)' }}>
-          El Rachum
-        </div>
-        <div className="text-[10px] tracking-widest uppercase" style={{ color: 'var(--c-muted)' }}>
-          Auctions · Canada
-        </div>
-      </div>
+    <Link href="/" className="flex items-center">
+      <img
+        src="/logo.jpeg"
+        alt="El Rachum Auctions"
+        style={{ height: 56, width: 56, objectFit: 'contain', borderRadius: 6, mixBlendMode: 'multiply' }}
+      />
     </Link>
   )
 }

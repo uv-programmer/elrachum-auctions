@@ -25,24 +25,15 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: 42, height: 42, flexShrink: 0 }}>
-                <circle cx="40" cy="43" r="33" stroke="#9c6e28" strokeWidth="1.5" fill="none"/>
-                <circle cx="40" cy="43" r="28" stroke="#9c6e28" strokeWidth="0.6" fill="none" opacity="0.5"/>
-                <g fill="#9c6e28">
-                  <polygon points="25,20 28,12 31,17 34,10 37,17 40,10 43,17 46,10 49,17 52,12 55,20" opacity="0.95"/>
-                  <rect x="24" y="19" width="32" height="3" rx="1" opacity="0.9"/>
-                </g>
-                <text x="19" y="60" fontFamily="Georgia, serif" fontSize="36" fontWeight="700" fill="#1e1810" opacity="0.9">E</text>
-                <text x="38" y="60" fontFamily="Georgia, serif" fontSize="36" fontWeight="700" fill="#9c6e28">R</text>
-              </svg>
-              <div>
-                <div className="font-serif text-base font-bold leading-none" style={{ color: 'var(--c-accent)' }}>El Rachum</div>
-                <div className="text-[10px] tracking-widest uppercase" style={{ color: 'var(--c-muted)' }}>Auctions · Canada</div>
-              </div>
+            <Link href="/" className="inline-flex items-center mb-4">
+              <img
+                src="/logo.jpeg"
+                alt="El Rachum Auctions"
+                style={{ height: 64, width: 64, objectFit: 'contain', borderRadius: 6, mixBlendMode: 'multiply' }}
+              />
             </Link>
             <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--c-muted)' }}>
-              Canada's trusted online auction house. Bid on quality liquidation merchandise — at unbeatable prices.
+              Discover quality lots at prices that make sense — every auction, every week.
             </p>
             <div className="flex gap-2">
               {[
@@ -119,7 +110,7 @@ export default function Footer() {
           style={{ borderTop: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
         >
           <span>© {new Date().getFullYear()} El Rachum Auctions LLC · All Rights Reserved</span>
-          <span>Proudly Canadian 🍁 · Windsor, Ontario</span>
+          <span>Local roots. Canadian values. 🍁</span>
         </div>
       </div>
     </footer>
