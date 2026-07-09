@@ -1,3 +1,5 @@
+import DynamicHours from '@/components/DynamicHours'
+
 export const metadata = { title: 'Privacy Policy' }
 
 const Section = ({ title, children }) => (
@@ -73,7 +75,7 @@ export default function PrivacyPage() {
               <h2 className="font-serif text-xl font-bold mb-4" style={{ color: 'var(--c-text)' }}>Shipping Policy</h2>
               <div className="text-sm leading-[1.85] space-y-3" style={{ color: 'var(--c-muted)' }}>
                 <p>El Rachum Auctions LLC operates on a <strong style={{ color: 'var(--c-text)' }}>pickup-only</strong> basis. We do not offer shipping or delivery services at this time.</p>
-                <p>Winning bidders must pick up their items at our facility during scheduled pickup hours: <strong style={{ color: 'var(--c-text)' }}>Tuesday & Thursday 11AM–5PM</strong> and <strong style={{ color: 'var(--c-text)' }}>Saturday 10AM–2PM</strong>.</p>
+                <p>Winning bidders must pick up their items at our facility during scheduled pickup hours: <strong style={{ color: 'var(--c-text)' }}><DynamicHours /></strong>.</p>
                 <p>We encourage bidders to book a pickup slot in advance using our online booking form to minimize wait times. Please bring a valid photo ID and your lot numbers (or winning bid confirmation email) when you arrive.</p>
                 <p>Buyers are responsible for bringing appropriate packaging and transportation for large or fragile items. We are not liable for damage that occurs during transport after pickup.</p>
               </div>

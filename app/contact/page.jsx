@@ -2,13 +2,7 @@
 
 import { useState } from 'react'
 import { MapPin, Mail, Clock, Phone, Send, CheckCircle } from 'lucide-react'
-
-const info = [
-  { icon: <MapPin size={16} />, label: 'Location',     text: '2825 County Road 42, Windsor, Ontario N8V 0A4' },
-  { icon: <Mail size={16} />,   label: 'Email',        text: 'contact@elrachumauctions.com', href: 'mailto:contact@elrachumauctions.com' },
-  { icon: <Phone size={16} />,  label: 'Phone',        text: '(519) 982-3332', href: 'tel:+15199823332' },
-  { icon: <Clock size={16} />,  label: 'Pickup Hours', text: 'Tue & Thu: 11AM–5PM · Sat: 10AM–2PM' },
-]
+import { useWorkingHours } from '@/hooks/useWorkingHours'
 
 const inputCls = {
   background: 'rgba(156,110,40,0.04)',
@@ -20,6 +14,14 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(false)
+  const hours = useWorkingHours('Tue & Thu: 11AM–5PM · Sat: 10AM–2PM')
+
+  const info = [
+    { icon: <MapPin size={16} />, label: 'Location',     text: '2825 County Road 42, Windsor, Ontario N8V 0A4' },
+    { icon: <Mail size={16} />,   label: 'Email',        text: 'contact@elrachumauctions.com', href: 'mailto:contact@elrachumauctions.com' },
+    { icon: <Phone size={16} />,  label: 'Phone',        text: '(519) 982-3332', href: 'tel:+15199823332' },
+    { icon: <Clock size={16} />,  label: 'Pickup Hours', text: hours },
+  ]
 
   const submit = async (e) => {
     e.preventDefault()

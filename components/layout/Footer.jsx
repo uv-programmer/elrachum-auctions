@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Facebook, Instagram, MapPin, Mail, Clock, Phone } from 'lucide-react'
+import { useWorkingHours } from '@/hooks/useWorkingHours'
 
 const navigate = [
   { href: '/',         label: 'Home' },
@@ -18,6 +19,8 @@ const support = [
 ]
 
 export default function Footer() {
+  const hours = useWorkingHours('Tue & Thu: 11AM–5PM · Sat: 10AM–2PM')
+
   return (
     <footer style={{ background: 'var(--c-surface)', borderTop: '1px solid var(--c-border)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -93,7 +96,7 @@ export default function Footer() {
                 { icon: <Mail size={13} />,   text: 'contact@elrachumauctions.com' },
                 { icon: <Phone size={13} />,  text: '(519) 982-3332' },
                 { icon: <MapPin size={13} />, text: '2825 County Road 42, Windsor, Ontario N8V 0A4' },
-                { icon: <Clock size={13} />,  text: 'Tue & Thu: 11AM–5PM · Sat: 10AM–2PM' },
+                { icon: <Clock size={13} />,  text: hours },
               ].map(({ icon, text }) => (
                 <li key={text} className="flex items-start gap-2.5">
                   <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--c-gold)' }}>{icon}</span>

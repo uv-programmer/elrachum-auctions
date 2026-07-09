@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useWorkingHours } from '@/hooks/useWorkingHours'
 
 const faqs = [
   {
@@ -10,7 +11,7 @@ const faqs = [
   },
   {
     q: 'Where and when can I pick up my items?',
-    a: 'Pickup is available at our facility during scheduled hours: Tuesday & Thursday 11AM–5PM, Saturday 10AM–2PM. You can also book a specific pickup slot using our online booking form to avoid wait times.',
+    a: 'HOURS_PLACEHOLDER',
   },
   {
     q: "What is the buyer's premium?",
@@ -40,6 +41,7 @@ const faqs = [
 
 export default function FAQPage() {
   const [open, setOpen] = useState(null)
+  const hours = useWorkingHours('Tuesday & Thursday 11AM–5PM, Saturday 10AM–2PM')
   return (
     <>
       <section className="py-16 text-center" style={{ background: 'var(--c-surface)', borderBottom: '1px solid var(--c-border)' }}>
@@ -68,7 +70,11 @@ export default function FAQPage() {
                 </button>
                 {open === i && (
                   <div className="px-6 pb-5">
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--c-muted)' }}>{a}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--c-muted)' }}>
+                      {a === 'HOURS_PLACEHOLDER'
+                        ? `Pickup is available at our facility during scheduled hours: ${hours}. You can also book a specific pickup slot using our online booking form to avoid wait times.`
+                        : a}
+                    </p>
                   </div>
                 )}
               </div>
