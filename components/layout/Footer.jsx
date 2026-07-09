@@ -27,9 +27,9 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <Link href="/" className="inline-flex items-center mb-4">
               <img
-                src="/logo.jpeg"
+                src="/logo.png"
                 alt="El Rachum Auctions"
-                style={{ height: 64, width: 64, objectFit: 'contain', borderRadius: 6, mixBlendMode: 'multiply' }}
+                style={{ height: 110, width: 110, objectFit: 'contain', borderRadius: 6, mixBlendMode: 'multiply' }}
               />
             </Link>
             <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--c-muted)' }}>

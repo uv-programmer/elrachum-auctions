@@ -101,7 +101,7 @@ export default function RootLayout({ children }) {
       <body className="flex flex-col min-h-screen">
         <PostHogProvider>
           <Navbar />
-          <main className="flex-1 pt-[68px]">{children}</main>
+          <main className="flex-1 pt-[108px]">{children}</main>
           <Footer />
           <CookieBanner />
         </PostHogProvider>

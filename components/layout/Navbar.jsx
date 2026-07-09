@@ -19,9 +19,9 @@ function Logo() {
   return (
     <Link href="/" className="flex items-center">
       <img
-        src="/logo.jpeg"
+        src="/logo.png"
         alt="El Rachum Auctions"
-        style={{ height: 56, width: 56, objectFit: 'contain', borderRadius: 6, mixBlendMode: 'multiply' }}
+        style={{ height: 100, width: 100, objectFit: 'contain', borderRadius: 6, mixBlendMode: 'multiply' }}
       />
     </Link>
   )
@@ -55,7 +55,7 @@ export default function Navbar() {
       <nav
         className={clsx('fixed top-0 left-0 right-0 z-50 transition-all duration-300', scrolled ? 'backdrop-blur-md' : 'bg-transparent')}
         style={{
-          height: 68,
+          height: 108,
           background: scrolled ? 'rgba(250,247,242,0.96)' : 'transparent',
           borderBottom: scrolled ? '1px solid var(--c-border)' : 'none',
         }}
@@ -114,7 +114,7 @@ export default function Navbar() {
       {/* Mobile drawer */}
       {open && (
         <div
-          className="fixed inset-0 top-[68px] z-40 flex flex-col p-4"
+          className="fixed inset-0 top-[108px] z-40 flex flex-col p-4"
           style={{ background: 'rgba(250,247,242,0.98)', backdropFilter: 'blur(16px)', borderTop: '1px solid var(--c-border)' }}
         >
           <ul className="flex flex-col gap-1 mt-2">

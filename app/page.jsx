@@ -1,8 +1,40 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Calendar, Package, AlertTriangle, CreditCard, RotateCcw, Timer, Mail, Headphones, Share2 } from 'lucide-react'
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function fmt12(t) {
+  if (!t) return ''
+  const [h, m] = t.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return m ? `${hour}:${String(m).padStart(2, '0')}${period}` : `${hour}${period}`
+}
+
+function formatHours(days) {
+  const open = days.filter(d => d.is_open)
+  if (!open.length) return 'Currently closed\nCheck back soon for updated hours'
+  // Group days that share the same open/close time
+  const groups = {}
+  open.forEach(d => {
+    const key = `${d.open_time}|${d.close_time}`
+    if (!groups[key]) groups[key] = { open: d.open_time, close: d.close_time, days: [] }
+    groups[key].days.push(d.day_of_week)
+  })
+  const lines = Object.values(groups).map(g => {
+    const dayStr = g.days.map(n => DAY_NAMES[n]).join(' & ')
+    return `${dayStr}: ${fmt12(g.open)} – ${fmt12(g.close)}`
+  })
+  const closedDays = days.filter(d => !d.is_open)
+  if (closedDays.length) {
+    const names = closedDays.map(d => DAY_NAMES[d.day_of_week]).join(', ')
+    lines.push(`${names}: Closed`)
+  }
+  return lines.join('\n')
+}
 
 function Counter({ end, suffix = '' }) {
   const ref = useRef(null)
@@ -33,6 +65,15 @@ function Label({ children }) {
 }
 
 export default function HomePage() {
+  const [hoursDesc, setHoursDesc] = useState('Loading hours…')
+
+  useEffect(() => {
+    fetch('/api/schedule')
+      .then(r => r.json())
+      .then(({ days }) => { if (days?.length) setHoursDesc(formatHours(days)) })
+      .catch(() => setHoursDesc('See website for current hours'))
+  }, [])
+
   return (
     <>
       {/* HERO */}
@@ -131,7 +172,7 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { icon: '🕐', title: 'Operating Hours', desc: 'Tuesday & Thursday: 11AM – 5PM\nSaturday: 10AM – 2PM\nSunday & Monday: Closed' },
+              { icon: '🕐', title: 'Operating Hours', desc: hoursDesc },
               { icon: '🔍', title: 'Condition Reports', desc: 'Bid with confidence through our detailed lot descriptions. Every item is carefully reviewed before listing.' },
               { icon: '🔨', title: 'Live Auctions on HiBid', desc: 'Browse ongoing and upcoming auctions on HiBid — register free and place bids from anywhere in Canada.' },
             ].map(({ icon, title, desc }) => (
