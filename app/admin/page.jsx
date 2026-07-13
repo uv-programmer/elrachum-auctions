@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { LogOut, Trash2, RefreshCw, Lock, Download, TrendingUp, Calendar, Clock, Users, ExternalLink, Plus, X } from 'lucide-react'
+import { LogOut, Trash2, RefreshCw, Lock, Download, TrendingUp, Calendar, Clock, Users, ExternalLink, Plus, X, Settings, Rocket, Wrench } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -207,6 +207,186 @@ function WorkingHoursTab({ db }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── Site Settings tab ────────────────────────────────────────
+function SettingsTab({ db }) {
+  const [launchDate, setLaunchDate]       = useState('')
+  const [maintenance, setMaintenance]     = useState(false)
+  const [loading, setLoading]             = useState(true)
+  const [saving, setSaving]               = useState(false)
+  const [toast, setToast]                 = useState({ msg: '', type: 'ok' })
+
+  const showToast = (msg, type = 'ok') => {
+    setToast({ msg, type })
+    setTimeout(() => setToast({ msg: '', type: 'ok' }), 3000)
+  }
+
+  useEffect(() => {
+    db.from('site_settings').select('key, value').then(({ data }) => {
+      if (!data) return
+      const get = (k) => data.find(r => r.key === k)?.value ?? null
+      setMaintenance(get('maintenance_mode') === 'true')
+      setLaunchDate(get('launch_date') ? toLocalInput(get('launch_date')) : '')
+      setLoading(false)
+    })
+  }, [])
+
+  // Convert UTC ISO string → local datetime-local input value
+  function toLocalInput(iso) {
+    if (!iso) return ''
+    const d = new Date(iso)
+    // datetime-local needs "YYYY-MM-DDTHH:MM"
+    const pad = n => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+
+  const saveSetting = async (key, value) => {
+    const { error } = await db
+      .from('site_settings')
+      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    return error
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const launchISO = launchDate ? new Date(launchDate).toISOString() : null
+      const [e1, e2] = await Promise.all([
+        saveSetting('launch_date', launchISO),
+        saveSetting('maintenance_mode', maintenance ? 'true' : 'false'),
+      ])
+      if (e1 || e2) showToast('Save failed — check console', 'err')
+      else showToast('Settings saved! Changes live in ~30s')
+    } catch (e) {
+      showToast('Error: ' + e.message, 'err')
+    }
+    setSaving(false)
+  }
+
+  const clearLaunchDate = async () => {
+    setLaunchDate('')
+    setSaving(true)
+    await saveSetting('launch_date', null)
+    setSaving(false)
+    showToast('Launch date cleared')
+  }
+
+  if (loading) return (
+    <div className="flex justify-center py-16">
+      <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: '#9c6e28', borderTopColor: 'transparent' }} />
+    </div>
+  )
+
+  const launchInFuture = launchDate && new Date(launchDate) > new Date()
+  const effectiveMode = maintenance ? 'maintenance' : launchInFuture ? 'countdown' : 'live'
+
+  return (
+    <div className="max-w-xl space-y-6">
+
+      {/* Toast */}
+      {toast.msg && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg ${toast.type === 'err' ? 'bg-red-500' : ''}`}
+          style={toast.type !== 'err' ? { background: '#9c6e28' } : {}}>
+          {toast.type === 'err' ? '✕' : '✓'} {toast.msg}
+        </div>
+      )}
+
+      {/* Current mode badge */}
+      <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: '#fff', border: '1px solid #e8e0cc' }}>
+        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${effectiveMode === 'live' ? 'bg-green-400' : 'bg-amber-400'} animate-pulse`} />
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Site Mode</p>
+          <p className="text-sm font-semibold mt-0.5" style={{ color: '#1e1810' }}>
+            {effectiveMode === 'live'        && '🟢 Live — site is public'}
+            {effectiveMode === 'countdown'   && '⏳ Launching Soon — countdown active'}
+            {effectiveMode === 'maintenance' && '🔧 Maintenance Mode — site is hidden'}
+          </p>
+        </div>
+      </div>
+
+      {/* Launch Date */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Rocket size={15} style={{ color: '#9c6e28' }} />
+          <h3 className="font-semibold text-sm" style={{ color: '#1e1810' }}>Launch Date</h3>
+        </div>
+        <p className="text-xs text-slate-400 mb-4">
+          When set to a future date, all public pages show a "Launching Soon" countdown timer instead.
+          Clear it to go live immediately.
+        </p>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            type="datetime-local"
+            value={launchDate}
+            onChange={e => setLaunchDate(e.target.value)}
+            className="text-sm rounded-xl px-3 py-2 border border-slate-200 outline-none focus:border-[#9c6e28] flex-1 min-w-0"
+            style={{ colorScheme: 'light' }}
+          />
+          {launchDate && (
+            <button onClick={clearLaunchDate}
+              className="text-xs text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1 flex-shrink-0">
+              <X size={12} /> Clear
+            </button>
+          )}
+        </div>
+
+        {launchInFuture && (
+          <p className="text-xs mt-2" style={{ color: '#9c6e28' }}>
+            ⏳ Countdown active until {new Date(launchDate).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' })}
+          </p>
+        )}
+        {launchDate && !launchInFuture && (
+          <p className="text-xs mt-2 text-slate-400">Date is in the past — site is live.</p>
+        )}
+      </div>
+
+      {/* Maintenance Mode */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1 pr-4">
+            <Wrench size={15} style={{ color: '#9c6e28' }} />
+            <div>
+              <h3 className="font-semibold text-sm" style={{ color: '#1e1810' }}>Maintenance Mode</h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                When ON, all public pages show a "We'll Be Right Back" maintenance screen. Admin panel stays accessible. Takes priority over launch countdown.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setMaintenance(v => !v)}
+            className="relative flex-shrink-0 w-12 h-6 rounded-full transition-colors overflow-hidden"
+            style={{ background: maintenance ? '#b03a2e' : '#e2e8f0' }}
+          >
+            <span
+              className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+              style={{ left: maintenance ? '26px' : '4px' }}
+            />
+          </button>
+        </div>
+        {maintenance && (
+          <div className="mt-3 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: '#fff5f5', border: '1px solid #fecaca', color: '#b03a2e' }}>
+            ⚠ Maintenance mode is ON — the site is currently hidden from visitors.
+          </div>
+        )}
+      </div>
+
+      {/* Save */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        style={{ background: '#9c6e28' }}
+      >
+        {saving ? 'Saving…' : 'Save Settings'}
+      </button>
+
+      <p className="text-xs text-center text-slate-400">
+        Changes propagate within ~30 seconds (middleware cache).
+      </p>
     </div>
   )
 }
@@ -460,7 +640,7 @@ export default function AdminPage() {
       {/* Tab nav */}
       <div className="bg-white border-b border-slate-100 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex">
-          {[['overview', 'Overview'], ['bookings', 'All Bookings'], ['hours', 'Working Hours']].map(([key, label]) => (
+          {[['overview', 'Overview'], ['bookings', 'All Bookings'], ['hours', 'Working Hours'], ['settings', 'Settings']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`px-5 py-3.5 text-sm font-medium border-b-2 transition-colors ${
                 tab === key ? 'border-[#9c6e28] text-[#9c6e28]' : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -557,6 +737,9 @@ export default function AdminPage() {
 
         {/* ── WORKING HOURS ── */}
         {tab === 'hours' && <WorkingHoursTab db={supabase} />}
+
+        {/* ── SETTINGS ── */}
+        {tab === 'settings' && <SettingsTab db={supabase} />}
 
         {/* ── ALL BOOKINGS ── */}
         {tab === 'bookings' && (
